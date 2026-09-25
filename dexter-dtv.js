@@ -35,12 +35,12 @@
     if (String(options.show || '').toLowerCase() !== 'dexter' || Number(options.season) !== 1 ||
         !Number.isInteger(Number(options.episode)) || Number(options.episode) < 1 || Number(options.episode) > 12 ||
         !/^(novamedia|dtv)$/i.test(String(options.voice || ''))) {
-      fail('UNSUPPORTED_EPISODE', 'Поддерживается только Dexter, сезон 1, серии 1–12, озвучка Novamedia/DTV.');
+      fail('UNSUPPORTED_EPISODE', 'ÐŸÐ¾Ð´Ð´ÐµÑ€Ð¶Ð¸Ð²Ð°ÐµÑ‚ÑÑ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Dexter, ÑÐµÐ·Ð¾Ð½ 1, ÑÐµÑ€Ð¸Ð¸ 1â€“12, Ð¾Ð·Ð²ÑƒÑ‡ÐºÐ° Novamedia/DTV.');
     }
   }
 
   function isChallenge(html) {
-    return /checking_human|Проверяем, человек ли вы|security_check|antibot\/|captcha/i.test(html);
+    return /checking_human|ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼, Ñ‡ÐµÐ»Ð¾Ð²ÐµÐº Ð»Ð¸ Ð²Ñ‹|security_check|antibot\/|captcha/i.test(html);
   }
 
   function decodeCandidate(value) {
@@ -88,18 +88,18 @@
       credentials: 'omit',
       headers: {Accept: 'text/html,application/xhtml+xml'}
     }).then(function (response) {
-      if (!response || response.type === 'opaque') fail('CORS', 'Источник не разрешил браузеру прочитать ответ (CORS).');
-      if (!response.ok) fail('SOURCE_UNAVAILABLE', 'Источник временно недоступен.');
+      if (!response || response.type === 'opaque') fail('CORS', 'Ð˜ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº Ð½Ðµ Ñ€Ð°Ð·Ñ€ÐµÑˆÐ¸Ð» Ð±Ñ€Ð°ÑƒÐ·ÐµÑ€Ñƒ Ð¿Ñ€Ð¾Ñ‡Ð¸Ñ‚Ð°Ñ‚ÑŒ Ð¾Ñ‚Ð²ÐµÑ‚ (CORS).');
+      if (!response.ok) fail('SOURCE_UNAVAILABLE', 'Ð˜ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº Ð²Ñ€ÐµÐ¼ÐµÐ½Ð½Ð¾ Ð½ÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿ÐµÐ½.');
       return response.text().then(function (html) {
         if (typeof html !== 'string' || html.length > MAX_DOCUMENT_BYTES) {
-          fail('UNSUPPORTED_FORMAT', 'Источник вернул неподдерживаемый документ.');
+          fail('UNSUPPORTED_FORMAT', 'Ð˜ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº Ð²ÐµÑ€Ð½ÑƒÐ» Ð½ÐµÐ¿Ð¾Ð´Ð´ÐµÑ€Ð¶Ð¸Ð²Ð°ÐµÐ¼Ñ‹Ð¹ Ð´Ð¾ÐºÑƒÐ¼ÐµÐ½Ñ‚.');
         }
-        if (isChallenge(html)) fail('BROWSER_VERIFICATION', 'Источник требует интерактивную проверку человека.');
+        if (isChallenge(html)) fail('BROWSER_VERIFICATION', 'Ð˜ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº Ñ‚Ñ€ÐµÐ±ÑƒÐµÑ‚ Ð¸Ð½Ñ‚ÐµÑ€Ð°ÐºÑ‚Ð¸Ð²Ð½ÑƒÑŽ Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÑƒ Ñ‡ÐµÐ»Ð¾Ð²ÐµÐºÐ°.');
         return {html: html, url: response.url || url};
       });
     }).catch(function (error) {
       if (error && error.name === 'DexterDtvResolverError') throw error;
-      fail('CORS_OR_NETWORK', 'Браузер не может прочитать источник: CORS или сетевая ошибка.');
+      fail('CORS_OR_NETWORK', 'Ð‘Ñ€Ð°ÑƒÐ·ÐµÑ€ Ð½Ðµ Ð¼Ð¾Ð¶ÐµÑ‚ Ð¿Ñ€Ð¾Ñ‡Ð¸Ñ‚Ð°Ñ‚ÑŒ Ð¸ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº: CORS Ð¸Ð»Ð¸ ÑÐµÑ‚ÐµÐ²Ð°Ñ Ð¾ÑˆÐ¸Ð±ÐºÐ°.');
     });
   }
 
@@ -114,7 +114,7 @@
       return Promise.reject(error);
     }
     var fetchImpl = options && options.fetch || (typeof fetch === 'function' && fetch);
-    if (!fetchImpl) return Promise.reject(new ResolverError('FETCH_UNAVAILABLE', 'В этом окружении недоступен браузерный fetch.'));
+    if (!fetchImpl) return Promise.reject(new ResolverError('FETCH_UNAVAILABLE', 'Ð’ ÑÑ‚Ð¾Ð¼ Ð¾ÐºÑ€ÑƒÐ¶ÐµÐ½Ð¸Ð¸ Ð½ÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿ÐµÐ½ Ð±Ñ€Ð°ÑƒÐ·ÐµÑ€Ð½Ñ‹Ð¹ fetch.'));
 
     return readDocument(fetchImpl, episodePage(Number(options.episode))).then(function (page) {
       var candidates = mediaCandidates(page.html);
@@ -124,11 +124,11 @@
       }
 
       var iframe = findIframe(page.html, page.url);
-      if (!iframe) fail('SOURCE_FORMAT_UNSUPPORTED', 'В HTML не найден доступный адрес HLS или iframe плеера.');
+      if (!iframe) fail('SOURCE_FORMAT_UNSUPPORTED', 'Ð’ HTML Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ñ‹Ð¹ Ð°Ð´Ñ€ÐµÑ HLS Ð¸Ð»Ð¸ iframe Ð¿Ð»ÐµÐµÑ€Ð°.');
 
       return readDocument(fetchImpl, iframe).then(function (frame) {
         var frameCandidates = mediaCandidates(frame.html);
-        if (!frameCandidates.length) fail('SOURCE_FORMAT_UNSUPPORTED', 'В iframe плеера нет доступного адреса HLS.');
+        if (!frameCandidates.length) fail('SOURCE_FORMAT_UNSUPPORTED', 'Ð’ iframe Ð¿Ð»ÐµÐµÑ€Ð° Ð½ÐµÑ‚ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ð¾Ð³Ð¾ Ð°Ð´Ñ€ÐµÑÐ° HLS.');
         var selected = frameCandidates.find(function (url) { return inferQuality(frame.html, url) === '720p'; }) || frameCandidates[0];
         return resultFor(frame.html, selected);
       });
@@ -139,7 +139,7 @@
 });
 
 /* --- Dexter DTV bundled resolver --- */
-/* Dexter DTV for Lampa / ByLampa — v0.5.1
+/* Dexter DTV for Lampa / ByLampa â€” v0.5.2
  * Custom launch menu for Dexter (2006), S01. Direct HLS playback with bundled
  * Novamedia sources. Optional user-owned HTTPS resolver endpoint.
  * Source: https://github.com/kpavchenko/dexter-dtv
@@ -147,7 +147,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.5.1';
+  var VERSION = '0.5.2';
   var RUNTIME_KEY = '__dexter_dtv_runtime';
   var KEY_PREFIX = 'dexter_dtv_s1_e'; // Preserve v0.1.0 saved episode URLs.
   var RESOLVER_KEY = 'dexter_dtv_v2_resolver';
@@ -216,12 +216,12 @@
 
   function resolverErrorMessage(error) {
     var code = error && error.code;
-    if (code === 'BROWSER_VERIFICATION') return 'Источник требует интерактивную проверку человека.';
-    if (code === 'CORS' || code === 'CORS_OR_NETWORK') return 'ByLampa не может прочитать ответ источника из-за CORS или сети.';
-    if (code === 'SOURCE_UNAVAILABLE') return 'Источник временно недоступен.';
-    if (code === 'SOURCE_FORMAT_UNSUPPORTED' || code === 'UNSUPPORTED_FORMAT') return 'Источник не отдал поддерживаемый HLS-адрес.';
-    if (code === 'FETCH_UNAVAILABLE') return 'В этом окружении нет браузерного fetch.';
-    return 'Автополучение сейчас недоступно.';
+    if (code === 'BROWSER_VERIFICATION') return 'Ð˜ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº Ñ‚Ñ€ÐµÐ±ÑƒÐµÑ‚ Ð¸Ð½Ñ‚ÐµÑ€Ð°ÐºÑ‚Ð¸Ð²Ð½ÑƒÑŽ Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÑƒ Ñ‡ÐµÐ»Ð¾Ð²ÐµÐºÐ°.';
+    if (code === 'CORS' || code === 'CORS_OR_NETWORK') return 'ByLampa Ð½Ðµ Ð¼Ð¾Ð¶ÐµÑ‚ Ð¿Ñ€Ð¾Ñ‡Ð¸Ñ‚Ð°Ñ‚ÑŒ Ð¾Ñ‚Ð²ÐµÑ‚ Ð¸ÑÑ‚Ð¾Ñ‡Ð½Ð¸ÐºÐ° Ð¸Ð·-Ð·Ð° CORS Ð¸Ð»Ð¸ ÑÐµÑ‚Ð¸.';
+    if (code === 'SOURCE_UNAVAILABLE') return 'Ð˜ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº Ð²Ñ€ÐµÐ¼ÐµÐ½Ð½Ð¾ Ð½ÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿ÐµÐ½.';
+    if (code === 'SOURCE_FORMAT_UNSUPPORTED' || code === 'UNSUPPORTED_FORMAT') return 'Ð˜ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº Ð½Ðµ Ð¾Ñ‚Ð´Ð°Ð» Ð¿Ð¾Ð´Ð´ÐµÑ€Ð¶Ð¸Ð²Ð°ÐµÐ¼Ñ‹Ð¹ HLS-Ð°Ð´Ñ€ÐµÑ.';
+    if (code === 'FETCH_UNAVAILABLE') return 'Ð’ ÑÑ‚Ð¾Ð¼ Ð¾ÐºÑ€ÑƒÐ¶ÐµÐ½Ð¸Ð¸ Ð½ÐµÑ‚ Ð±Ñ€Ð°ÑƒÐ·ÐµÑ€Ð½Ð¾Ð³Ð¾ fetch.';
+    return 'ÐÐ²Ñ‚Ð¾Ð¿Ð¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ðµ ÑÐµÐ¹Ñ‡Ð°Ñ Ð½ÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ð¾.';
   }
 
   function loadAutoResolver() {
@@ -232,20 +232,20 @@
   }
 
   function titleFor(n) {
-    return 'Декстер (2006) · S01E' + (n < 10 ? '0' : '') + n + ' · DTV / Novamedia';
+    return 'Ð”ÐµÐºÑÑ‚ÐµÑ€ (2006) Â· S01E' + (n < 10 ? '0' : '') + n + ' Â· DTV / Novamedia';
   }
 
   function episodeItem(n, url) {
     return {url: url, title: titleFor(n), isonline: true, season: 1, episode: n};
   }
 
-  // Contract: POST {show,season,episode,voice}, Authorization: Bearer pm_…
+  // Contract: POST {show,season,episode,voice}, Authorization: Bearer pm_â€¦
   // Response: {ok:true,data:{url,expiresAt}}. No credentials or media URL are logged.
   function resolve(n, done) {
     var base = storageGet(RESOLVER_KEY);
-    if (!validApiBase(base)) return done(null, 'API не настроен');
+    if (!validApiBase(base)) return done(null, 'API Ð½Ðµ Ð½Ð°ÑÑ‚Ñ€Ð¾ÐµÐ½');
     var key = storageGet(DEVICE_KEY);
-    if (!validDeviceKey(key)) return done(null, 'Ключ устройства не настроен');
+    if (!validDeviceKey(key)) return done(null, 'ÐšÐ»ÑŽÑ‡ ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ð° Ð½Ðµ Ð½Ð°ÑÑ‚Ñ€Ð¾ÐµÐ½');
     var xhr = new XMLHttpRequest();
     var settled = false;
     function finish(url, error) {
@@ -265,27 +265,27 @@
           try {
             var failure = JSON.parse(xhr.responseText);
             if (failure && failure.error && failure.error.code === 'SOURCE_NOT_CONFIGURED') {
-              return finish(null, 'Источник на сервере пока не настроен.');
+              return finish(null, 'Ð˜ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº Ð½Ð° ÑÐµÑ€Ð²ÐµÑ€Ðµ Ð¿Ð¾ÐºÐ° Ð½Ðµ Ð½Ð°ÑÑ‚Ñ€Ð¾ÐµÐ½.');
             }
           } catch (ignored) {}
-          return finish(null, 'API вернул ошибку HTTP ' + xhr.status);
+          return finish(null, 'API Ð²ÐµÑ€Ð½ÑƒÐ» Ð¾ÑˆÐ¸Ð±ÐºÑƒ HTTP ' + xhr.status);
         }
         try {
           var data = JSON.parse(xhr.responseText);
           var url = String(data && data.ok && data.data && data.data.url || '').trim();
-          return validMediaUrl(url) ? finish(url, null) : finish(null, 'В ответе API нет корректного URL');
-        } catch (e) { return finish(null, 'Некорректный ответ API'); }
+          return validMediaUrl(url) ? finish(url, null) : finish(null, 'Ð’ Ð¾Ñ‚Ð²ÐµÑ‚Ðµ API Ð½ÐµÑ‚ ÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ð¾Ð³Ð¾ URL');
+        } catch (e) { return finish(null, 'ÐÐµÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ñ‹Ð¹ Ð¾Ñ‚Ð²ÐµÑ‚ API'); }
       };
-      xhr.onerror = function () { finish(null, 'Нет доступа к API (сеть/CORS)'); };
-      xhr.ontimeout = function () { finish(null, 'API не ответил за 10 секунд'); };
+      xhr.onerror = function () { finish(null, 'ÐÐµÑ‚ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð° Ðº API (ÑÐµÑ‚ÑŒ/CORS)'); };
+      xhr.ontimeout = function () { finish(null, 'API Ð½Ðµ Ð¾Ñ‚Ð²ÐµÑ‚Ð¸Ð» Ð·Ð° 10 ÑÐµÐºÑƒÐ½Ð´'); };
       xhr.send(JSON.stringify({show: 'dexter', season: 1, episode: n, voice: 'novamedia'}));
-    } catch (e) { logSafe(e); finish(null, 'Не удалось вызвать API'); }
+    } catch (e) { logSafe(e); finish(null, 'ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð²Ñ‹Ð·Ð²Ð°Ñ‚ÑŒ API'); }
   }
 
   function play(n, freshUrl) {
     var url = freshUrl || urlFor(n);
     if (!validMediaUrl(url)) {
-      info('Серия ' + n + ': нет прямой ссылки HLS/MP4.');
+      info('Ð¡ÐµÑ€Ð¸Ñ ' + n + ': Ð½ÐµÑ‚ Ð¿Ñ€ÑÐ¼Ð¾Ð¹ ÑÑÑ‹Ð»ÐºÐ¸ HLS/MP4.');
       return;
     }
     var playlist = [];
@@ -301,24 +301,29 @@
     }
     if (!current) return;
     try {
+      // Android Lampa serializes the launch item immediately and reads its
+      // `playlist` field to build DDD's video_list extra. Clone the entries so
+      // current does not reference itself and create a circular JSON object.
+      current.playlist = playlist.map(function (item) {
+        return episodeItem(item.episode, item.url);
+      });
       Lampa.Player.play(current);
     } catch (e) {
       logSafe(e);
       var errorType = e && typeof e.name === 'string' && /^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(e.name)
-        ? e.name : 'неизвестная ошибка';
-      info('Lampa не смогла запустить Dexter DTV (' + errorType + ').');
+        ? e.name : 'Ð½ÐµÐ¸Ð·Ð²ÐµÑÑ‚Ð½Ð°Ñ Ð¾ÑˆÐ¸Ð±ÐºÐ°';
+      info('Lampa Ð½Ðµ ÑÐ¼Ð¾Ð³Ð»Ð° Ð·Ð°Ð¿ÑƒÑÑ‚Ð¸Ñ‚ÑŒ Dexter DTV (' + errorType + ').');
       return;
     }
-    // Lampa-based plugins set the queue through Player.playlist() after
-    // Player.play(). Keep it separate from the selected item so the player
-    // bridge can serialize the current source normally.
+    // Also update Lampa's in-page queue state after launch; the Android bridge
+    // already received the cloned queue above as part of the launch payload.
     try {
       if (typeof Lampa.Player.playlist === 'function') {
         Lampa.Player.playlist(playlist);
       }
     } catch (e) {
       logSafe(e);
-      info('Видео запускается, но Lampa не приняла список серий.');
+      info('Ð’Ð¸Ð´ÐµÐ¾ Ð·Ð°Ð¿ÑƒÑÐºÐ°ÐµÑ‚ÑÑ, Ð½Ð¾ Lampa Ð½Ðµ Ð¿Ñ€Ð¸Ð½ÑÐ»Ð° ÑÐ¿Ð¸ÑÐ¾Ðº ÑÐµÑ€Ð¸Ð¹.');
     }
   }
 
@@ -367,13 +372,13 @@
     } catch (e) {
       restore(session);
       logSafe(e);
-      info('Не удалось открыть поле ввода.');
+      info('ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¾Ñ‚ÐºÑ€Ñ‹Ñ‚ÑŒ Ð¿Ð¾Ð»Ðµ Ð²Ð²Ð¾Ð´Ð°.');
     }
   }
 
   function editEpisode(n, session, autoplay) {
     var current = urlFor(n);
-    inputText(session, 'Серия ' + n + ' · прямая ссылка .m3u8 / .mp4', current, function (url) {
+    inputText(session, 'Ð¡ÐµÑ€Ð¸Ñ ' + n + ' Â· Ð¿Ñ€ÑÐ¼Ð°Ñ ÑÑÑ‹Ð»ÐºÐ° .m3u8 / .mp4', current, function (url) {
       // Lampa reports the current value on Back.  Treat it as a cancellation,
       // rather than writing it again or reopening a stale modal.
       if (!url) return;
@@ -381,11 +386,11 @@
       // episode list; do not start an unrelated API-key setup flow.
       if (url === current) return openEpisodes(session);
       if (!validMediaUrl(url)) {
-        info('Нужен полный HTTPS-адрес .m3u8, .mp4 или .mpd.');
+        info('ÐÑƒÐ¶ÐµÐ½ Ð¿Ð¾Ð»Ð½Ñ‹Ð¹ HTTPS-Ð°Ð´Ñ€ÐµÑ .m3u8, .mp4 Ð¸Ð»Ð¸ .mpd.');
         return openEpisodes(session);
       }
       storageSet(KEY_PREFIX + n, url);
-      info('Ссылка серии ' + n + ' сохранена на этом устройстве.');
+      info('Ð¡ÑÑ‹Ð»ÐºÐ° ÑÐµÑ€Ð¸Ð¸ ' + n + ' ÑÐ¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð° Ð½Ð° ÑÑ‚Ð¾Ð¼ ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ðµ.');
       if (autoplay) play(n);
       else openEpisodes(session);
     });
@@ -411,7 +416,7 @@
   }
 
   function importBatch(session) {
-    inputText(session, 'Ссылки: 1=https://... || 2=https://...', '', function (entered) {
+    inputText(session, 'Ð¡ÑÑ‹Ð»ÐºÐ¸: 1=https://... || 2=https://...', '', function (entered) {
       if (!entered) return;
       var parsed = parseBatch(entered);
       var count = 0;
@@ -419,35 +424,35 @@
         storageSet(KEY_PREFIX + n, parsed.items[n]);
         count++;
       });
-      info('Импортировано ссылок: ' + count + (parsed.errors ? '; ошибок: ' + parsed.errors : ''));
+      info('Ð˜Ð¼Ð¿Ð¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¾ ÑÑÑ‹Ð»Ð¾Ðº: ' + count + (parsed.errors ? '; Ð¾ÑˆÐ¸Ð±Ð¾Ðº: ' + parsed.errors : ''));
       if (count) openEpisodes(session);
-      else info('Не найдено корректных HTTPS-ссылок для серий 1–12.');
+      else info('ÐÐµ Ð½Ð°Ð¹Ð´ÐµÐ½Ð¾ ÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ñ‹Ñ… HTTPS-ÑÑÑ‹Ð»Ð¾Ðº Ð´Ð»Ñ ÑÐµÑ€Ð¸Ð¹ 1â€“12.');
     });
   }
 
   function configureResolver(session) {
     var current = storageGet(RESOLVER_KEY);
-    inputText(session, 'HTTPS URL твоего API /resolve (пусто = отмена)', current, function (url) {
+    inputText(session, 'HTTPS URL Ñ‚Ð²Ð¾ÐµÐ³Ð¾ API /resolve (Ð¿ÑƒÑÑ‚Ð¾ = Ð¾Ñ‚Ð¼ÐµÐ½Ð°)', current, function (url) {
       if (!url || url === current) return openEpisodes(session);
       if (!validApiBase(url)) {
-        info('Нужен HTTPS-адрес API без ? и #.');
+        info('ÐÑƒÐ¶ÐµÐ½ HTTPS-Ð°Ð´Ñ€ÐµÑ API Ð±ÐµÐ· ? Ð¸ #.');
         return openEpisodes(session);
       }
       storageSet(RESOLVER_KEY, url);
-      info('Адрес API сохранён. Теперь добавь ключ устройства.');
+      info('ÐÐ´Ñ€ÐµÑ API ÑÐ¾Ñ…Ñ€Ð°Ð½Ñ‘Ð½. Ð¢ÐµÐ¿ÐµÑ€ÑŒ Ð´Ð¾Ð±Ð°Ð²ÑŒ ÐºÐ»ÑŽÑ‡ ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ð°.');
       configureDeviceKey(session);
     });
   }
 
   function configureDeviceKey(session) {
-    inputText(session, 'Ключ устройства pm_… (не показывается повторно; пусто = отмена)', '', function (key) {
+    inputText(session, 'ÐšÐ»ÑŽÑ‡ ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ð° pm_â€¦ (Ð½Ðµ Ð¿Ð¾ÐºÐ°Ð·Ñ‹Ð²Ð°ÐµÑ‚ÑÑ Ð¿Ð¾Ð²Ñ‚Ð¾Ñ€Ð½Ð¾; Ð¿ÑƒÑÑ‚Ð¾ = Ð¾Ñ‚Ð¼ÐµÐ½Ð°)', '', function (key) {
       if (!key) return openEpisodes(session);
       if (!validDeviceKey(key)) {
-        info('Нужен ключ устройства формата pm_…');
+        info('ÐÑƒÐ¶ÐµÐ½ ÐºÐ»ÑŽÑ‡ ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ð° Ñ„Ð¾Ñ€Ð¼Ð°Ñ‚Ð° pm_â€¦');
         return openEpisodes(session);
       }
       storageSet(DEVICE_KEY, key);
-      info('Ключ устройства сохранён только в локальном хранилище Lampa.');
+      info('ÐšÐ»ÑŽÑ‡ ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ð° ÑÐ¾Ñ…Ñ€Ð°Ð½Ñ‘Ð½ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð² Ð»Ð¾ÐºÐ°Ð»ÑŒÐ½Ð¾Ð¼ Ñ…Ñ€Ð°Ð½Ð¸Ð»Ð¸Ñ‰Ðµ Lampa.');
       openEpisodes(session);
     });
   }
@@ -460,7 +465,7 @@
     if (!validApiBase(storageGet(RESOLVER_KEY)) || !validDeviceKey(storageGet(DEVICE_KEY))) {
       return editEpisode(n, session, true);
     }
-    info('Получаю ссылку для серии ' + n + '...');
+    info('ÐŸÐ¾Ð»ÑƒÑ‡Ð°ÑŽ ÑÑÑ‹Ð»ÐºÑƒ Ð´Ð»Ñ ÑÐµÑ€Ð¸Ð¸ ' + n + '...');
     resolve(n, function (url, error) {
       if (url) return play(n, url); // API results are not persisted.
       info(error);
@@ -469,7 +474,7 @@
   }
 
   function autoPlayEpisode(n, session) {
-    info('Проверяю экспериментальный автоисточник для серии ' + n + '...');
+    info('ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÑŽ ÑÐºÑÐ¿ÐµÑ€Ð¸Ð¼ÐµÐ½Ñ‚Ð°Ð»ÑŒÐ½Ñ‹Ð¹ Ð°Ð²Ñ‚Ð¾Ð¸ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº Ð´Ð»Ñ ÑÐµÑ€Ð¸Ð¸ ' + n + '...');
     loadAutoResolver().then(function (resolver) {
       return resolver.resolveEpisode({
         show: 'dexter',
@@ -484,7 +489,7 @@
       play(n, result.url);
     }).catch(function (error) {
       logSafe(error);
-      info(resolverErrorMessage(error) + ' Ручной ввод доступен долгим OK на серии.');
+      info(resolverErrorMessage(error) + ' Ð ÑƒÑ‡Ð½Ð¾Ð¹ Ð²Ð²Ð¾Ð´ Ð´Ð¾ÑÑ‚ÑƒÐ¿ÐµÐ½ Ð´Ð¾Ð»Ð³Ð¸Ð¼ OK Ð½Ð° ÑÐµÑ€Ð¸Ð¸.');
       restore(session);
     });
   }
@@ -493,13 +498,13 @@
     var items = [];
     for (var n = 1; n <= EPISODES; n++) {
       items.push({
-        title: 'Серия ' + n,
-        subtitle: 'Эксперимент · Rezka/Novamedia · без обхода проверок',
+        title: 'Ð¡ÐµÑ€Ð¸Ñ ' + n,
+        subtitle: 'Ð­ÐºÑÐ¿ÐµÑ€Ð¸Ð¼ÐµÐ½Ñ‚ Â· Rezka/Novamedia Â· Ð±ÐµÐ· Ð¾Ð±Ñ…Ð¾Ð´Ð° Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¾Ðº',
         episode: n
       });
     }
     Lampa.Select.show({
-      title: 'Получить ссылку автоматически',
+      title: 'ÐŸÐ¾Ð»ÑƒÑ‡Ð¸Ñ‚ÑŒ ÑÑÑ‹Ð»ÐºÑƒ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸',
       items: items,
       onBack: function () { restore(session); },
       onSelect: function (item) {
@@ -524,21 +529,21 @@
     var hasResolver = validApiBase(storageGet(RESOLVER_KEY)) && validDeviceKey(storageGet(DEVICE_KEY));
     for (var n = 1; n <= EPISODES; n++) {
       items.push({
-        title: 'Серия ' + n,
-        subtitle: storageGet(KEY_PREFIX + n) ? 'Ссылка заменена на этом устройстве · OK = запуск · долгий OK = изменить' :
-          (validMediaUrl(DEFAULT_SOURCES[n]) ? 'Встроенная Novamedia-ссылка · OK = запуск · долгий OK = заменить' :
-            (hasResolver ? 'API готов · долгий OK = добавить свою ссылку' : 'Пустой слот · долгий OK = добавить ссылку')),
+        title: 'Ð¡ÐµÑ€Ð¸Ñ ' + n,
+        subtitle: storageGet(KEY_PREFIX + n) ? 'Ð¡ÑÑ‹Ð»ÐºÐ° Ð·Ð°Ð¼ÐµÐ½ÐµÐ½Ð° Ð½Ð° ÑÑ‚Ð¾Ð¼ ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ðµ Â· OK = Ð·Ð°Ð¿ÑƒÑÐº Â· Ð´Ð¾Ð»Ð³Ð¸Ð¹ OK = Ð¸Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ' :
+          (validMediaUrl(DEFAULT_SOURCES[n]) ? 'Ð’ÑÑ‚Ñ€Ð¾ÐµÐ½Ð½Ð°Ñ Novamedia-ÑÑÑ‹Ð»ÐºÐ° Â· OK = Ð·Ð°Ð¿ÑƒÑÐº Â· Ð´Ð¾Ð»Ð³Ð¸Ð¹ OK = Ð·Ð°Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ' :
+            (hasResolver ? 'API Ð³Ð¾Ñ‚Ð¾Ð² Â· Ð´Ð¾Ð»Ð³Ð¸Ð¹ OK = Ð´Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ ÑÐ²Ð¾ÑŽ ÑÑÑ‹Ð»ÐºÑƒ' : 'ÐŸÑƒÑÑ‚Ð¾Ð¹ ÑÐ»Ð¾Ñ‚ Â· Ð´Ð¾Ð»Ð³Ð¸Ð¹ OK = Ð´Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ ÑÑÑ‹Ð»ÐºÑƒ')),
         episode: n
       });
     }
-    items.push({title: 'Получить ссылку автоматически (эксперимент)',
-      subtitle: 'Rezka / Novamedia · может быть заблокировано CORS или проверкой', action: 'auto'});
-    items.push({title: 'Импорт ссылок пачкой (1=URL || 2=URL)', action: 'batch'});
-    items.push({title: 'Автоисточник · API (дополнительно)',
-      subtitle: hasResolver ? 'Личный HTTPS API и ключ устройства настроены' : 'Настроить личный API и ключ устройства', action: 'api'});
-    items.push({title: 'Версия плагина ' + VERSION, subtitle: 'DTV/Novamedia · 12 серий первого сезона', action: 'about'});
+    items.push({title: 'ÐŸÐ¾Ð»ÑƒÑ‡Ð¸Ñ‚ÑŒ ÑÑÑ‹Ð»ÐºÑƒ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸ (ÑÐºÑÐ¿ÐµÑ€Ð¸Ð¼ÐµÐ½Ñ‚)',
+      subtitle: 'Rezka / Novamedia Â· Ð¼Ð¾Ð¶ÐµÑ‚ Ð±Ñ‹Ñ‚ÑŒ Ð·Ð°Ð±Ð»Ð¾ÐºÐ¸Ñ€Ð¾Ð²Ð°Ð½Ð¾ CORS Ð¸Ð»Ð¸ Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÐ¾Ð¹', action: 'auto'});
+    items.push({title: 'Ð˜Ð¼Ð¿Ð¾Ñ€Ñ‚ ÑÑÑ‹Ð»Ð¾Ðº Ð¿Ð°Ñ‡ÐºÐ¾Ð¹ (1=URL || 2=URL)', action: 'batch'});
+    items.push({title: 'ÐÐ²Ñ‚Ð¾Ð¸ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº Â· API (Ð´Ð¾Ð¿Ð¾Ð»Ð½Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾)',
+      subtitle: hasResolver ? 'Ð›Ð¸Ñ‡Ð½Ñ‹Ð¹ HTTPS API Ð¸ ÐºÐ»ÑŽÑ‡ ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ð° Ð½Ð°ÑÑ‚Ñ€Ð¾ÐµÐ½Ñ‹' : 'ÐÐ°ÑÑ‚Ñ€Ð¾Ð¸Ñ‚ÑŒ Ð»Ð¸Ñ‡Ð½Ñ‹Ð¹ API Ð¸ ÐºÐ»ÑŽÑ‡ ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ð°', action: 'api'});
+    items.push({title: 'Ð’ÐµÑ€ÑÐ¸Ñ Ð¿Ð»Ð°Ð³Ð¸Ð½Ð° ' + VERSION, subtitle: 'DTV/Novamedia Â· 12 ÑÐµÑ€Ð¸Ð¹ Ð¿ÐµÑ€Ð²Ð¾Ð³Ð¾ ÑÐµÐ·Ð¾Ð½Ð°', action: 'about'});
     Lampa.Select.show({
-      title: 'Декстер (2006) · 1 сезон · DTV',
+      title: 'Ð”ÐµÐºÑÑ‚ÐµÑ€ (2006) Â· 1 ÑÐµÐ·Ð¾Ð½ Â· DTV',
       items: items,
       onBack: function () { restore(session); },
       onLong: function (item) {
@@ -554,7 +559,7 @@
         else if (item.action === 'batch') importBatch(session);
         else if (item.action === 'api') configureResolver(session);
         else if (item.action === 'about') {
-          info('v' + VERSION + ': встроенные ссылки запускаются без API.');
+          info('v' + VERSION + ': Ð²ÑÑ‚Ñ€Ð¾ÐµÐ½Ð½Ñ‹Ðµ ÑÑÑ‹Ð»ÐºÐ¸ Ð·Ð°Ð¿ÑƒÑÐºÐ°ÑŽÑ‚ÑÑ Ð±ÐµÐ· API.');
           openEpisodes(session);
         }
       }
@@ -565,7 +570,7 @@
     if (!movie) return false;
     var title = String(movie.original_name || movie.original_title || movie.name || movie.title || '');
     var year = String(movie.first_air_date || movie.release_date || '').slice(0, 4);
-    return /^(dexter|декстер)$/i.test(title.trim()) && (!year || year === '2006');
+    return /^(dexter|Ð´ÐµÐºÑÑ‚ÐµÑ€)$/i.test(title.trim()) && (!year || year === '2006');
   }
 
   function addButton(e) {
@@ -580,7 +585,7 @@
       var button = root.find('.dexter-dtv-launcher').first();
       if (!button.length) {
         button = $('<div class="full-start__button selector view--online dexter-dtv-launcher">' +
-          '<span>▶ Декстер · DTV</span></div>');
+          '<span>â–¶ Ð”ÐµÐºÑÑ‚ÐµÑ€ Â· DTV</span></div>');
         target.prepend(button);
       }
       bindButton(button);
