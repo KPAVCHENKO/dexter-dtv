@@ -1,45 +1,36 @@
-# Dexter DTV / Novamedia for Lampa and ByLampa — v0.4.0
+# Dexter DTV / Novamedia для Lampa / ByLampa — v0.5.0
 
-Dexter DTV adds a first-season menu with 12 separate episode slots to the Dexter (2006) card. It sends the chosen video and its playlist through Lampa.Player; select DDD Video Player in Lampa if it is the Android TV player you use.
+В плагине встроены прямые HLS-адреса всех 12 серий первого сезона Dexter (2006), озвучка Novamedia/DTV. Адрес для каждой серии отдельный. Для запуска не нужен ввод URL на телевизоре и не требуется Autoposter.
 
-## Install or update in ByLampa
+## Установка или обновление
 
-1. Open **Settings → Extensions → Add plugin**.
-2. Enter https://kpavchenko.github.io/dexter-dtv/dexter-dtv.js.
-3. Restart Lampa, then open the **Dexter (2006)** card.
-4. Choose **Декстер · DTV**.
+1. В ByLampa открой **Настройки → Расширения → Добавить плагин**.
+2. Укажи: https://kpavchenko.github.io/dexter-dtv/dexter-dtv.js
+3. Перезапусти Lampa и открой карточку **Dexter (2006)**.
+4. Нажми **Декстер · DTV** и выбери серию.
 
-If an older copy is already installed at this URL, restart Lampa after updating; v0.4.0 removes its previous listener before registering a new one.
+Обычное нажатие OK запускает встроенную ссылку. Долгое нажатие OK открывает её замену. Старая ссылка, если она уже сохранена в Lampa.Storage, остаётся приоритетной и не стирается обновлением. Новые ссылки имеют отдельные слоты и не повторяют один адрес на все серии.
 
-## Saved direct links
+## Плейлист и замена источника
 
-The normal, independent playback mode is saved direct links:
+При запуске Lampa.Player получает выбранную серию вместе с плейлистом из всех 12 адресов. На Haier выбери DDD Video Player в настройках Lampa. После окончания серии можно перейти к следующей из плейлиста.
 
-- Long-press OK on an episode and enter a direct HTTPS .m3u8, .mp4, or .mpd media URL.
-- The URL is stored only in Lampa.Storage on this device, in that episode's own slot: dexter_dtv_s1_e1 through dexter_dtv_s1_e12.
-- Selecting a saved episode starts its saved URL immediately. It does not contact Rezka or require Autoposter.
-- Long-press OK again to replace only that episode's URL. Other episode slots are unchanged.
-- Confirming the unchanged value returns to the episode list.
+Адреса получены из запросов HLS-манифестов при обычном выборе соответствующих серий на Rezka Live в переводе Novamedia. Для серий 2–12 экспорт содержал основной домен и второй домен-зеркало с тем же путём; в плагин включён адрес второго домена, а оба сохранены в отдельном JSON. Адрес первой серии взят из ссылки, ранее проверенной владельцем в VLC. Ответы HLS-серверов в Work независимо проверить не удалось: навигация к ним блокируется клиентом браузера. Встроенные ссылки могут истечь; долгим OK можно заменить адрес конкретной серии.
 
-One observed first-episode HLS URL continued to work for about 15 hours after it was obtained. Its actual expiry period is unknown; the plugin does not label saved links permanent.
+Дополнительный файл dexter-dtv-sources.json содержит соответствие серий, выбранный адрес и замеченные зеркала.
 
-Use **Импорт ссылок пачкой** for lines such as 1=https://…/manifest.m3u8, one line per episode. Never put direct URLs with temporary parameters into the repository, logs, or public messages.
+## Проверка на Haier
 
-## Optional sources
+1. Открой кнопку плагина и пройди эпизоды пультом.
+2. Нажми OK на серии: видео должно открыться без ввода URL.
+3. Проверь Back и восстановление фокуса на карточке.
+4. Проверь запуск через DDD и переход к следующей серии из плейлиста.
+5. Долгим OK открой редактирование и проверь, что можно заменить адрес серии.
+6. Перезапусти Lampa: должна остаться одна кнопка Dexter DTV.
 
-- **Личный HTTPS API** is optional. Configure an authorized Autoposter-compatible endpoint and its device key through **Автоисточник · API**. The plugin uses a POST request with the episode data and stores the key only in local Lampa.Storage. It is used for an empty episode slot; it never replaces or blocks a saved direct link.
-- **Получить ссылку автоматически (эксперимент)** only reads CORS-accessible public HTML and declared iframes. It does not bypass human verification, reuse cookies, replay protected requests, or construct opaque paths. A blocked source reports a diagnostic and leaves remote navigation usable.
+Автотесты проверяют нумерацию 12 разных HLS-адресов, полный плейлист, старые пользовательские настройки, ввод/Back/фокус и независимое воспроизведение без API. Реальный запуск на Haier требует проверки на устройстве.
 
-## What to check on Haier Android TV
-
-1. Open the launcher and traverse all 12 episodes with the remote.
-2. Press Back from the menu and from an input: focus must return to the Dexter card.
-3. Add a URL, reopen the menu, confirm it unchanged, then replace it.
-4. Start a saved episode in DDD and verify the playlist contains the saved episodes.
-5. With the private API configured, start a saved episode and confirm it does not request the API.
-6. Restart Lampa and verify there is exactly one Dexter DTV button and handler.
-
-Developer checks:
+## Разработка
 
 ~~~text
 node scripts/build.cjs

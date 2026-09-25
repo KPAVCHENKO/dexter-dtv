@@ -5,6 +5,16 @@ const vm = require('vm');
 const assert = require('node:assert/strict');
 
 const plugin = fs.readFileSync(__dirname + '/dexter-dtv.js', 'utf8');
+const capturedSources = JSON.parse(fs.readFileSync(__dirname + '/dexter-dtv-sources.json', 'utf8'));
+const bundledMatch = plugin.match(/var DEFAULT_SOURCES = (\{[\s\S]*?\});\s*var EPISODES/);
+assert.ok(bundledMatch, 'the plugin includes a built-in episode source map');
+const bundledSources = JSON.parse(bundledMatch[1]);
+assert.equal(Object.keys(bundledSources).length, 12, 'source map has exactly twelve episode slots');
+assert.equal(new Set(Object.values(bundledSources)).size, 12, 'source map has twelve distinct HLS URLs');
+for (let n = 1; n <= 12; n++) {
+  assert.equal(bundledSources[n], capturedSources.episodes[String(n)].selectedUrl,
+    'bundled source matches the captured JSON for episode ' + n);
+}
 const storage = {
   dexter_dtv_s1_e1: 'https://cdn.example.org/show/s01e01/manifest.m3u8'
 };
@@ -135,12 +145,18 @@ openMenu();
 activeMenu.onSelect(itemForEpisode(1));
 assert.equal(active, 'full_start', 'episode selection fully closes Select and restores card navigation');
 assert.equal(launched.url, storage.dexter_dtv_s1_e1, 'v0.1 saved URL remains playable');
-assert.equal(launched.playlist.length, 1, 'playlist is supplied in Player.play data');
+assert.equal(launched.playlist.length, 12, 'all bundled episode sources are supplied in Player.play data');
+assert.equal(Array.from(launched.playlist, (item) => item.episode).join(','),
+  '1,2,3,4,5,6,7,8,9,10,11,12', 'playlist has one correctly numbered entry per episode');
+assert.equal(new Set(launched.playlist.map((item) => item.url)).size, 12,
+  'every episode has its own distinct source URL');
+assert.ok(launched.playlist.every((item) => /manifest\.m3u8(?:[?#]|$)/i.test(item.url)),
+  'all bundled episode sources are HLS manifests');
 assert.equal(playlistCalls, 0, 'playlist is not sent too late after Player.play');
 
 openMenu();
-activeMenu.onSelect(itemForEpisode(2));
-assert.equal(active, 'keyboard', 'missing episode opens Lampa input');
+activeMenu.onLong(itemForEpisode(2));
+assert.equal(active, 'keyboard', 'long OK opens the replacement editor');
 input.complete('');
 assert.equal(active, 'full_start', 'cancelled input restores card controller, not settings_component');
 
@@ -238,23 +254,31 @@ async function testPrivateMediaApiContract() {
   openMenu();
   activeMenu.onSelect(itemForEpisode(5));
   await new Promise((resolve) => setImmediate(resolve));
-  assert.equal(calls.length, 1, 'configured private API is called once');
+  assert.equal(calls.length, 0, 'an embedded episode source bypasses the optional private API');
+  assert.ok(/manifest\.m3u8$/i.test(launched.url), 'embedded HLS starts directly');
+  assert.equal(storage.dexter_dtv_s1_e5, undefined, 'embedded sources are not copied to device storage');
+
+  storage.dexter_dtv_s1_e5 = 'not-a-media-url';
+  openMenu();
+  activeMenu.onSelect(itemForEpisode(5));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(calls.length, 1, 'API remains available when a slot has no valid direct URL');
   assert.equal(calls[0].method, 'POST', 'private API contract uses POST');
   assert.equal(calls[0].url, storage.dexter_dtv_v2_resolver, 'episode parameters are not placed in the URL');
   assert.equal(calls[0].headers.Authorization, 'Bearer ' + storage.dexter_dtv_v2_device_key, 'device key uses Authorization');
   assert.deepEqual(JSON.parse(calls[0].body), {show: 'dexter', season: 1, episode: 5, voice: 'novamedia'});
   assert.equal(launched.url, 'https://media.example.invalid/api/manifest.m3u8', 'enveloped API result launches Player');
-  assert.equal(storage.dexter_dtv_s1_e5, undefined, 'private API result is never persisted');
+  delete storage.dexter_dtv_s1_e5;
 
   openMenu();
   activeMenu.onSelect(itemForEpisode(1));
   await new Promise((resolve) => setImmediate(resolve));
-  assert.equal(calls.length, 1, 'a saved direct URL does not require or call the optional API');
+  assert.equal(calls.length, 1, 'saved direct URLs do not add another optional API call');
   assert.equal(launched.url, storage.dexter_dtv_s1_e1, 'saved direct URL remains the playback priority');
 }
 
 testAutoResolverIntegration().then(testPrivateMediaApiContract).then(() => {
-  console.log('PASS: Select lifecycle, Back/focus restoration, input cancellation, nested editor, batch storage, playback playlist, auto-resolver integration, and private-media API contract');
+  console.log('PASS: remote navigation, focus restoration, long-OK editing, 12 unique HLS playlist entries, auto-resolver isolation, and API-independent playback');
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

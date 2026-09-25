@@ -147,11 +147,25 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.4.0';
+  var VERSION = '0.5.0';
   var RUNTIME_KEY = '__dexter_dtv_runtime';
   var KEY_PREFIX = 'dexter_dtv_s1_e'; // Preserve v0.1.0 saved episode URLs.
   var RESOLVER_KEY = 'dexter_dtv_v2_resolver';
   var DEVICE_KEY = 'dexter_dtv_v2_device_key';
+  var DEFAULT_SOURCES = {
+    "1": "https://limbo.voidfralom.org/357a73b57fe957a57a9418ce31a136be:2026092522:6637584a-fb07-47c8-bd2f-2abdfdd38376/1/3/5/4/5/9/1/ehkrk.mp4:hls:manifest.m3u8",
+    "2": "https://petra.voidfralom.org/041a565f3193648a65b6b33f55855fff:2026092609:3560fa89-adef-485d-acfc-e6a62e162d02/1/3/5/4/6/2/4/h04ls.mp4:hls:manifest.m3u8",
+    "3": "https://bingo.voidfralom.org/f45ea109a3eda10d39655acae8839ebe:2026092609:c009d285-2b28-4721-96b5-5c78c1a7aa02/1/3/5/4/6/0/6/7c9vk.mp4:hls:manifest.m3u8",
+    "4": "https://fox.voidfralom.org/d5adbf9c1af6c39c5aa2c372010d709b:2026092609:09fbe2c9-27de-42ae-93e5-20cdb66dbd9b/1/3/5/4/5/9/3/15oo2.mp4:hls:manifest.m3u8",
+    "5": "https://silence.voidfralom.org/8f92a07b95cfd22374386a953e57c9ee:2026092609:05cd9bd2-e853-4855-b455-e7db1c5e9a72/1/3/5/4/6/0/7/u5k8p.mp4:hls:manifest.m3u8",
+    "6": "https://apollo.voidfralom.org/2ac45cce97ac7e6fef01e757f3216b78:2026092609:b3d054e0-ec9f-4de7-839e-0ee2bbe82eb1/1/3/5/4/5/9/4/2vzew.mp4:hls:manifest.m3u8",
+    "7": "https://flora.voidfralom.org/d0f9731e3e95eee1f993b17b37cbc501:2026092609:a9e69a36-7e45-4adb-862a-654ab43156d8/1/3/5/4/5/9/2/l1nqb.mp4:hls:manifest.m3u8",
+    "8": "https://octopus.voidfralom.org/e0e9eb9f0cfd8e185b045267b00dddd5:2026092609:c7ef19ad-d583-4da8-b020-9170dd553350/1/3/5/4/6/0/8/cz3g4.mp4:hls:manifest.m3u8",
+    "9": "https://sierra.voidfralom.org/bbeee53375a1adec3e968aba328276cf:2026092609:39930d70-5f53-4bc4-b24a-5dc035760dae/1/3/5/4/6/0/0/o7d0z.mp4:hls:manifest.m3u8",
+    "10": "https://pioneer.voidfralom.org/7d37f71f9972af52abd39b52ba63665f:2026092609:c5c5424c-b4a6-4fd6-a901-61880dfc85c7/1/3/5/4/5/9/6/pevpm.mp4:hls:manifest.m3u8",
+    "11": "https://nika.voidfralom.org/13f2a9bcf52bc220774fee46ded875bb:2026092609:cfa36bf2-47e1-4c1d-a69e-da851ba723bb/1/3/5/4/6/0/9/5glo7.mp4:hls:manifest.m3u8",
+    "12": "https://scorpius.voidfralom.org/b439e9e1bb343670df3d90f958587f8d:2026092609:86960975-7df5-4a50-ae5c-33b14093e0e9/1/3/5/4/5/9/7/n74w1.mp4:hls:manifest.m3u8"
+  };
   var EPISODES = 12;
   var started = false;
   var retries = 0;
@@ -181,7 +195,9 @@
     Lampa.Storage.set(key, value);
   }
 
-  function urlFor(n) { return storageGet(KEY_PREFIX + n); }
+  // Preserve device-specific saved overrides; every empty slot uses its own
+  // bundled Novamedia URL.
+  function urlFor(n) { return storageGet(KEY_PREFIX + n) || DEFAULT_SOURCES[n] || ''; }
 
   function validMediaUrl(url) {
     if (typeof url !== 'string' || url.length > 8192 || /[\s<>"'`]/.test(url)) return false;
@@ -501,8 +517,9 @@
     for (var n = 1; n <= EPISODES; n++) {
       items.push({
         title: 'Серия ' + n,
-        subtitle: validMediaUrl(urlFor(n)) ? 'Ссылка сохранена · срок действия неизвестен · долгий OK = заменить' :
-          (hasResolver ? 'API готов · долгий OK = добавить свою ссылку' : 'Пустой слот · долгий OK = добавить ссылку'),
+        subtitle: storageGet(KEY_PREFIX + n) ? 'Ссылка заменена на этом устройстве · OK = запуск · долгий OK = изменить' :
+          (validMediaUrl(DEFAULT_SOURCES[n]) ? 'Встроенная Novamedia-ссылка · OK = запуск · долгий OK = заменить' :
+            (hasResolver ? 'API готов · долгий OK = добавить свою ссылку' : 'Пустой слот · долгий OK = добавить ссылку')),
         episode: n
       });
     }
@@ -529,7 +546,7 @@
         else if (item.action === 'batch') importBatch(session);
         else if (item.action === 'api') configureResolver(session);
         else if (item.action === 'about') {
-          info('v' + VERSION + ': сохранённые прямые ссылки запускаются без API.');
+          info('v' + VERSION + ': встроенные ссылки запускаются без API.');
           openEpisodes(session);
         }
       }

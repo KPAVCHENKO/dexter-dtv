@@ -1,0 +1,197 @@
+{
+  "schema": "dexter-dtv-sources-v1",
+  "show": "Dexter (2006)",
+  "season": 1,
+  "voice": "Novamedia/DTV",
+  "capturedAt": "2026-09-25T10:43:00.709Z",
+  "sourcePage": "https://rezka-live.net/serial/kriminal/38617-dekster-2006/70-novamedia/1-sezon",
+  "verificationNote": "Episodes 2–12 were observed as actual XHR manifest URLs; direct playlist-body checks were blocked by the Work browser client. Episode 1 was supplied and its VLC playback/resolution were reported by the user.",
+  "episodes": {
+    "1": {
+      "format": "hls",
+      "selectedUrl": "https://limbo.voidfralom.org/357a73b57fe957a57a9418ce31a136be:2026092522:6637584a-fb07-47c8-bd2f-2abdfdd38376/1/3/5/4/5/9/1/ehkrk.mp4:hls:manifest.m3u8",
+      "source": "user-provided; user reports VLC playback, 1280x720, Novamedia/DTV",
+      "observedAt": null,
+      "responseBodyInspected": false,
+      "alternates": []
+    },
+    "2": {
+      "format": "hls",
+      "selectedUrl": "https://petra.voidfralom.org/041a565f3193648a65b6b33f55855fff:2026092609:3560fa89-adef-485d-acfc-e6a62e162d02/1/3/5/4/6/2/4/h04ls.mp4:hls:manifest.m3u8",
+      "source": "captured browser XHR request for this episode",
+      "requestType": "xmlhttprequest",
+      "observedAt": "2026-09-25T10:38:43.630Z",
+      "responseBodyInspected": false,
+      "alternates": [
+        {
+          "url": "https://voidfralom.org/041a565f3193648a65b6b33f55855fff:2026092609:3560fa89-adef-485d-acfc-e6a62e162d02/1/3/5/4/6/2/4/h04ls.mp4:hls:manifest.m3u8",
+          "host": "voidfralom.org",
+          "observedAt": "2026-09-25T10:38:25.500Z",
+          "requestType": "xmlhttprequest"
+        }
+      ]
+    },
+    "3": {
+      "format": "hls",
+      "selectedUrl": "https://bingo.voidfralom.org/f45ea109a3eda10d39655acae8839ebe:2026092609:c009d285-2b28-4721-96b5-5c78c1a7aa02/1/3/5/4/6/0/6/7c9vk.mp4:hls:manifest.m3u8",
+      "source": "captured browser XHR request for this episode",
+      "requestType": "xmlhttprequest",
+      "observedAt": "2026-09-25T10:39:09.691Z",
+      "responseBodyInspected": false,
+      "alternates": [
+        {
+          "url": "https://voidfralom.org/f45ea109a3eda10d39655acae8839ebe:2026092609:c009d285-2b28-4721-96b5-5c78c1a7aa02/1/3/5/4/6/0/6/7c9vk.mp4:hls:manifest.m3u8",
+          "host": "voidfralom.org",
+          "observedAt": "2026-09-25T10:39:09.508Z",
+          "requestType": "xmlhttprequest"
+        }
+      ]
+    },
+    "4": {
+      "format": "hls",
+      "selectedUrl": "https://fox.voidfralom.org/d5adbf9c1af6c39c5aa2c372010d709b:2026092609:09fbe2c9-27de-42ae-93e5-20cdb66dbd9b/1/3/5/4/5/9/3/15oo2.mp4:hls:manifest.m3u8",
+      "source": "captured browser XHR request for this episode",
+      "requestType": "xmlhttprequest",
+      "observedAt": "2026-09-25T10:39:52.876Z",
+      "responseBodyInspected": false,
+      "alternates": [
+        {
+          "url": "https://voidfralom.org/d5adbf9c1af6c39c5aa2c372010d709b:2026092609:09fbe2c9-27de-42ae-93e5-20cdb66dbd9b/1/3/5/4/5/9/3/15oo2.mp4:hls:manifest.m3u8",
+          "host": "voidfralom.org",
+          "observedAt": "2026-09-25T10:39:52.705Z",
+          "requestType": "xmlhttprequest"
+        }
+      ]
+    },
+    "5": {
+      "format": "hls",
+      "selectedUrl": "https://silence.voidfralom.org/8f92a07b95cfd22374386a953e57c9ee:2026092609:05cd9bd2-e853-4855-b455-e7db1c5e9a72/1/3/5/4/6/0/7/u5k8p.mp4:hls:manifest.m3u8",
+      "source": "captured browser XHR request for this episode",
+      "requestType": "xmlhttprequest",
+      "observedAt": "2026-09-25T10:40:23.362Z",
+      "responseBodyInspected": false,
+      "alternates": [
+        {
+          "url": "https://voidfralom.org/8f92a07b95cfd22374386a953e57c9ee:2026092609:05cd9bd2-e853-4855-b455-e7db1c5e9a72/1/3/5/4/6/0/7/u5k8p.mp4:hls:manifest.m3u8",
+          "host": "voidfralom.org",
+          "observedAt": "2026-09-25T10:40:23.154Z",
+          "requestType": "xmlhttprequest"
+        }
+      ]
+    },
+    "6": {
+      "format": "hls",
+      "selectedUrl": "https://apollo.voidfralom.org/2ac45cce97ac7e6fef01e757f3216b78:2026092609:b3d054e0-ec9f-4de7-839e-0ee2bbe82eb1/1/3/5/4/5/9/4/2vzew.mp4:hls:manifest.m3u8",
+      "source": "captured browser XHR request for this episode",
+      "requestType": "xmlhttprequest",
+      "observedAt": "2026-09-25T10:40:39.968Z",
+      "responseBodyInspected": false,
+      "alternates": [
+        {
+          "url": "https://voidfralom.org/2ac45cce97ac7e6fef01e757f3216b78:2026092609:b3d054e0-ec9f-4de7-839e-0ee2bbe82eb1/1/3/5/4/5/9/4/2vzew.mp4:hls:manifest.m3u8",
+          "host": "voidfralom.org",
+          "observedAt": "2026-09-25T10:40:39.768Z",
+          "requestType": "xmlhttprequest"
+        }
+      ]
+    },
+    "7": {
+      "format": "hls",
+      "selectedUrl": "https://flora.voidfralom.org/d0f9731e3e95eee1f993b17b37cbc501:2026092609:a9e69a36-7e45-4adb-862a-654ab43156d8/1/3/5/4/5/9/2/l1nqb.mp4:hls:manifest.m3u8",
+      "source": "captured browser XHR request for this episode",
+      "requestType": "xmlhttprequest",
+      "observedAt": "2026-09-25T10:41:14.119Z",
+      "responseBodyInspected": false,
+      "alternates": [
+        {
+          "url": "https://voidfralom.org/d0f9731e3e95eee1f993b17b37cbc501:2026092609:a9e69a36-7e45-4adb-862a-654ab43156d8/1/3/5/4/5/9/2/l1nqb.mp4:hls:manifest.m3u8",
+          "host": "voidfralom.org",
+          "observedAt": "2026-09-25T10:41:13.932Z",
+          "requestType": "xmlhttprequest"
+        }
+      ]
+    },
+    "8": {
+      "format": "hls",
+      "selectedUrl": "https://octopus.voidfralom.org/e0e9eb9f0cfd8e185b045267b00dddd5:2026092609:c7ef19ad-d583-4da8-b020-9170dd553350/1/3/5/4/6/0/8/cz3g4.mp4:hls:manifest.m3u8",
+      "source": "captured browser XHR request for this episode",
+      "requestType": "xmlhttprequest",
+      "observedAt": "2026-09-25T10:41:36.871Z",
+      "responseBodyInspected": false,
+      "alternates": [
+        {
+          "url": "https://voidfralom.org/e0e9eb9f0cfd8e185b045267b00dddd5:2026092609:c7ef19ad-d583-4da8-b020-9170dd553350/1/3/5/4/6/0/8/cz3g4.mp4:hls:manifest.m3u8",
+          "host": "voidfralom.org",
+          "observedAt": "2026-09-25T10:41:36.666Z",
+          "requestType": "xmlhttprequest"
+        }
+      ]
+    },
+    "9": {
+      "format": "hls",
+      "selectedUrl": "https://sierra.voidfralom.org/bbeee53375a1adec3e968aba328276cf:2026092609:39930d70-5f53-4bc4-b24a-5dc035760dae/1/3/5/4/6/0/0/o7d0z.mp4:hls:manifest.m3u8",
+      "source": "captured browser XHR request for this episode",
+      "requestType": "xmlhttprequest",
+      "observedAt": "2026-09-25T10:41:52.543Z",
+      "responseBodyInspected": false,
+      "alternates": [
+        {
+          "url": "https://voidfralom.org/bbeee53375a1adec3e968aba328276cf:2026092609:39930d70-5f53-4bc4-b24a-5dc035760dae/1/3/5/4/6/0/0/o7d0z.mp4:hls:manifest.m3u8",
+          "host": "voidfralom.org",
+          "observedAt": "2026-09-25T10:41:52.301Z",
+          "requestType": "xmlhttprequest"
+        }
+      ]
+    },
+    "10": {
+      "format": "hls",
+      "selectedUrl": "https://pioneer.voidfralom.org/7d37f71f9972af52abd39b52ba63665f:2026092609:c5c5424c-b4a6-4fd6-a901-61880dfc85c7/1/3/5/4/5/9/6/pevpm.mp4:hls:manifest.m3u8",
+      "source": "captured browser XHR request for this episode",
+      "requestType": "xmlhttprequest",
+      "observedAt": "2026-09-25T10:42:09.140Z",
+      "responseBodyInspected": false,
+      "alternates": [
+        {
+          "url": "https://voidfralom.org/7d37f71f9972af52abd39b52ba63665f:2026092609:c5c5424c-b4a6-4fd6-a901-61880dfc85c7/1/3/5/4/5/9/6/pevpm.mp4:hls:manifest.m3u8",
+          "host": "voidfralom.org",
+          "observedAt": "2026-09-25T10:42:08.968Z",
+          "requestType": "xmlhttprequest"
+        }
+      ]
+    },
+    "11": {
+      "format": "hls",
+      "selectedUrl": "https://nika.voidfralom.org/13f2a9bcf52bc220774fee46ded875bb:2026092609:cfa36bf2-47e1-4c1d-a69e-da851ba723bb/1/3/5/4/6/0/9/5glo7.mp4:hls:manifest.m3u8",
+      "source": "captured browser XHR request for this episode",
+      "requestType": "xmlhttprequest",
+      "observedAt": "2026-09-25T10:42:37.687Z",
+      "responseBodyInspected": false,
+      "alternates": [
+        {
+          "url": "https://voidfralom.org/13f2a9bcf52bc220774fee46ded875bb:2026092609:cfa36bf2-47e1-4c1d-a69e-da851ba723bb/1/3/5/4/6/0/9/5glo7.mp4:hls:manifest.m3u8",
+          "host": "voidfralom.org",
+          "observedAt": "2026-09-25T10:42:37.528Z",
+          "requestType": "xmlhttprequest"
+        }
+      ]
+    },
+    "12": {
+      "format": "hls",
+      "selectedUrl": "https://scorpius.voidfralom.org/b439e9e1bb343670df3d90f958587f8d:2026092609:86960975-7df5-4a50-ae5c-33b14093e0e9/1/3/5/4/5/9/7/n74w1.mp4:hls:manifest.m3u8",
+      "source": "captured browser XHR request for this episode",
+      "requestType": "xmlhttprequest",
+      "observedAt": "2026-09-25T10:43:00.709Z",
+      "responseBodyInspected": false,
+      "alternates": [
+        {
+          "url": "https://voidfralom.org/b439e9e1bb343670df3d90f958587f8d:2026092609:86960975-7df5-4a50-ae5c-33b14093e0e9/1/3/5/4/5/9/7/n74w1.mp4:hls:manifest.m3u8",
+          "host": "voidfralom.org",
+          "observedAt": "2026-09-25T10:43:00.490Z",
+          "requestType": "xmlhttprequest"
+        }
+      ]
+    }
+  }
+}
+
+
