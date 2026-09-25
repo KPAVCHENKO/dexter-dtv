@@ -65,9 +65,9 @@
   }
 
   function resultFor(html, url) {
-    // The requested Novamedia source is known to be 1280×720. Keep that
-    // constrained fallback only when a readable document supplied the URL.
-    return {url: url, quality: inferQuality(html, url) || '720p', expiresAt: null};
+    // Quality is reported only when it is present in the readable player
+    // document. One observed 720p stream does not establish future results.
+    return {url: url, quality: inferQuality(html, url), expiresAt: null};
   }
 
   function findIframe(html, pageUrl) {

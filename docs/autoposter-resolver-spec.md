@@ -46,6 +46,6 @@ Operational requirements:
 - Configure the exact ByLampa origin in `PRIVATE_MEDIA_CORS_ORIGINS`; do not use `*`.
 - The device key is entered locally in Lampa settings and is never bundled into `dexter-dtv.js`.
 - Do not log full media URLs, query tokens, cookies, or response bodies.
-- Treat URLs as short-lived: do not persist them in the plugin, and cache only non-secret metadata for a short, explicit TTL.
+- Do not persist media URLs in the plugin; cache only non-secret metadata for an explicit, documented TTL.
 - Validate show=dexter, season 1..8, episode 1..30, and voice=novamedia.
 - Return a 4xx/5xx status plus the stable diagnostic code for blocked, unavailable, unsupported, or invalid requests.

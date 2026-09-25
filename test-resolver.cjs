@@ -50,7 +50,7 @@ async function main() {
     }
   });
   assert.equal(calls, 2, 'a declared iframe is read once through the same CORS-safe path');
-  assert.equal(frameResult.quality, '720p', 'known 720p source is used when player data omits a label');
+  assert.equal(frameResult.quality, null, 'quality is not guessed when readable player data omits it');
 
   await rejectsWith(
     () => resolveEpisode({show: 'dexter', season: 2, episode: 1, voice: 'novamedia', fetch: () => Promise.resolve(response(''))}),

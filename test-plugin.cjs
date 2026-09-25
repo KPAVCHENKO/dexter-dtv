@@ -162,6 +162,20 @@ assert.equal(storage.dexter_dtv_s1_e2, 'https://cdn.example.org/show/s01e02/new.
 assert.equal(active, 'select', 'batch import returns to a usable menu');
 context.Lampa.Select.close();
 
+openMenu();
+activeMenu.onLong(itemForEpisode(1));
+const unchangedSavedUrl = input.config.value;
+input.complete(unchangedSavedUrl);
+assert.equal(active, 'select', 'confirming a saved URL returns to episodes without opening API-key input');
+assert.equal(storage.dexter_dtv_s1_e1, unchangedSavedUrl, 'confirming a saved URL does not alter its own slot');
+context.Lampa.Select.close();
+
+openMenu();
+activeMenu.onSelect(activeMenu.items.find((item) => item.action === 'api'));
+input.complete('');
+assert.equal(active, 'select', 'cancelling API configuration returns to a usable episode menu');
+context.Lampa.Select.close();
+
 // Re-evaluating the plugin simulates Lampa loading the same plugin URL again.
 vm.runInNewContext(plugin, context);
 assert.equal(fullListeners.length, 1, 'reload removes the previous full listener');
@@ -193,7 +207,7 @@ async function testAutoResolverIntegration() {
   assert.equal(receivedRequest.voice, 'novamedia');
   assert.equal(launched.url, 'https://media.example.invalid/fresh/manifest.m3u8', 'fresh resolver output launches Player');
   assert.equal(launched.playlist.find((item) => item.episode === 3).url, launched.url, 'fresh source is in the launch playlist');
-  assert.equal(storage.dexter_dtv_s1_e3, undefined, 'short-lived automatic URL is never saved');
+  assert.equal(storage.dexter_dtv_s1_e3, undefined, 'automatic resolver output is never saved');
 
   context.window.DexterDtvRezkaResolver = {
     resolveEpisode: () => Promise.reject({code: 'BROWSER_VERIFICATION'})
@@ -231,6 +245,12 @@ async function testPrivateMediaApiContract() {
   assert.deepEqual(JSON.parse(calls[0].body), {show: 'dexter', season: 1, episode: 5, voice: 'novamedia'});
   assert.equal(launched.url, 'https://media.example.invalid/api/manifest.m3u8', 'enveloped API result launches Player');
   assert.equal(storage.dexter_dtv_s1_e5, undefined, 'private API result is never persisted');
+
+  openMenu();
+  activeMenu.onSelect(itemForEpisode(1));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(calls.length, 1, 'a saved direct URL does not require or call the optional API');
+  assert.equal(launched.url, storage.dexter_dtv_s1_e1, 'saved direct URL remains the playback priority');
 }
 
 testAutoResolverIntegration().then(testPrivateMediaApiContract).then(() => {

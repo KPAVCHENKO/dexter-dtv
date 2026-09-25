@@ -65,9 +65,9 @@
   }
 
   function resultFor(html, url) {
-    // The requested Novamedia source is known to be 1280×720. Keep that
-    // constrained fallback only when a readable document supplied the URL.
-    return {url: url, quality: inferQuality(html, url) || '720p', expiresAt: null};
+    // Quality is reported only when it is present in the readable player
+    // document. One observed 720p stream does not establish future results.
+    return {url: url, quality: inferQuality(html, url), expiresAt: null};
   }
 
   function findIframe(html, pageUrl) {
@@ -139,7 +139,7 @@
 });
 
 /* --- Dexter DTV bundled resolver --- */
-/* Dexter DTV for Lampa / ByLampa — v0.3.1
+/* Dexter DTV for Lampa / ByLampa — v0.4.0
  * Custom launch menu for Dexter (2006), S01. Direct HLS playback, optional user-owned
  * HTTPS resolver endpoint. No hard-coded stream URLs, cookies, tokens or scraping.
  * Source: https://github.com/kpavchenko/dexter-dtv
@@ -147,7 +147,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.3.1';
+  var VERSION = '0.4.0';
   var RUNTIME_KEY = '__dexter_dtv_runtime';
   var KEY_PREFIX = 'dexter_dtv_s1_e'; // Preserve v0.1.0 saved episode URLs.
   var RESOLVER_KEY = 'dexter_dtv_v2_resolver';
@@ -353,7 +353,9 @@
       // Lampa reports the current value on Back.  Treat it as a cancellation,
       // rather than writing it again or reopening a stale modal.
       if (!url) return;
-      if (url === current) return configureDeviceKey(session);
+      // Input returns its existing value on confirmation. Return to the
+      // episode list; do not start an unrelated API-key setup flow.
+      if (url === current) return openEpisodes(session);
       if (!validMediaUrl(url)) {
         info('Нужен полный HTTPS-адрес .m3u8, .mp4 или .mpd.');
         return openEpisodes(session);
@@ -402,7 +404,7 @@
   function configureResolver(session) {
     var current = storageGet(RESOLVER_KEY);
     inputText(session, 'HTTPS URL твоего API /resolve (пусто = отмена)', current, function (url) {
-      if (!url || url === current) return;
+      if (!url || url === current) return openEpisodes(session);
       if (!validApiBase(url)) {
         info('Нужен HTTPS-адрес API без ? и #.');
         return openEpisodes(session);
@@ -428,16 +430,17 @@
 
   function launchEpisode(n, session) {
     var saved = urlFor(n);
+    // A user-owned saved direct link is always the first choice. The optional
+    // private API is only a source for an empty slot, never a playback gate.
+    if (validMediaUrl(saved)) return play(n);
     if (!validApiBase(storageGet(RESOLVER_KEY)) || !validDeviceKey(storageGet(DEVICE_KEY))) {
-      if (validMediaUrl(saved)) return play(n);
       return editEpisode(n, session, true);
     }
     info('Получаю ссылку для серии ' + n + '...');
     resolve(n, function (url, error) {
-      if (url) return play(n, url); // Fresh short-lived URL is never persisted.
-      info(error + (validMediaUrl(saved) ? ' · пробую сохранённую ссылку' : ''));
-      if (validMediaUrl(saved)) play(n);
-      else editEpisode(n, session, true);
+      if (url) return play(n, url); // API results are not persisted.
+      info(error);
+      editEpisode(n, session, true);
     });
   }
 
@@ -452,8 +455,8 @@
       });
     }).then(function (result) {
       if (!result || !validMediaUrl(result.url)) throw {code: 'UNSUPPORTED_FORMAT'};
-      // Fresh resolver results may be short-lived. They are passed to DDD but
-      // deliberately never saved in Lampa.Storage.
+      // Resolver results are passed to DDD but deliberately never saved in
+      // Lampa.Storage.
       play(n, result.url);
     }).catch(function (error) {
       logSafe(error);
@@ -498,8 +501,8 @@
     for (var n = 1; n <= EPISODES; n++) {
       items.push({
         title: 'Серия ' + n,
-        subtitle: hasResolver ? 'Автоисточник · долгий OK = заменить URL' :
-          (validMediaUrl(urlFor(n)) ? 'Ссылка сохранена · долгий OK = заменить' : 'Добавить ссылку'),
+        subtitle: validMediaUrl(urlFor(n)) ? 'Ссылка сохранена · срок действия неизвестен · долгий OK = заменить' :
+          (hasResolver ? 'API готов · долгий OK = добавить свою ссылку' : 'Пустой слот · долгий OK = добавить ссылку'),
         episode: n
       });
     }
@@ -508,7 +511,7 @@
     items.push({title: 'Импорт ссылок пачкой (1=URL || 2=URL)', action: 'batch'});
     items.push({title: 'Автоисточник · API (дополнительно)',
       subtitle: hasResolver ? 'Личный HTTPS API и ключ устройства настроены' : 'Настроить личный API и ключ устройства', action: 'api'});
-    items.push({title: 'Версия плагина ' + VERSION, subtitle: 'HD · DTV/Novamedia · 12 серий', action: 'about'});
+    items.push({title: 'Версия плагина ' + VERSION, subtitle: 'DTV/Novamedia · 12 серий первого сезона', action: 'about'});
     Lampa.Select.show({
       title: 'Декстер (2006) · 1 сезон · DTV',
       items: items,
@@ -526,7 +529,7 @@
         else if (item.action === 'batch') importBatch(session);
         else if (item.action === 'api') configureResolver(session);
         else if (item.action === 'about') {
-          info('v' + VERSION + ': исправлено управление; автоисточник требует свой API.');
+          info('v' + VERSION + ': сохранённые прямые ссылки запускаются без API.');
           openEpisodes(session);
         }
       }
