@@ -173,4 +173,41 @@ context.Lampa.Select.close();
 
 assert.ok(selectCloses >= 7, 'every exit path uses Select.close rather than leaving an invisible Select controller');
 assert.ok(controllerToggles.every((name) => name === 'full_start' || name === 'select'), 'no hard-coded content controller is used');
-console.log('PASS: Select lifecycle, Back/focus restoration, input cancellation, nested editor, batch storage, playback playlist, and reload safety');
+
+async function testAutoResolverIntegration() {
+  let receivedRequest = null;
+  context.window.DexterDtvRezkaResolver = {
+    resolveEpisode: (request) => {
+      receivedRequest = request;
+      return Promise.resolve({url: 'https://media.example.invalid/fresh/manifest.m3u8', quality: '720p', expiresAt: null});
+    }
+  };
+  openMenu();
+  activeMenu.onSelect(activeMenu.items.find((item) => item.action === 'auto'));
+  assert.equal(active, 'select', 'automatic-source option opens an episode picker');
+  activeMenu.onSelect(itemForEpisode(3));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(receivedRequest.show, 'dexter');
+  assert.equal(receivedRequest.season, 1);
+  assert.equal(receivedRequest.episode, 3);
+  assert.equal(receivedRequest.voice, 'novamedia');
+  assert.equal(launched.url, 'https://media.example.invalid/fresh/manifest.m3u8', 'fresh resolver output launches Player');
+  assert.equal(launched.playlist.find((item) => item.episode === 3).url, launched.url, 'fresh source is in the launch playlist');
+  assert.equal(storage.dexter_dtv_s1_e3, undefined, 'short-lived automatic URL is never saved');
+
+  context.window.DexterDtvRezkaResolver = {
+    resolveEpisode: () => Promise.reject({code: 'BROWSER_VERIFICATION'})
+  };
+  openMenu();
+  activeMenu.onSelect(activeMenu.items.find((item) => item.action === 'auto'));
+  activeMenu.onSelect(itemForEpisode(4));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(active, 'full_start', 'resolver diagnostic leaves remote navigation on the card');
+}
+
+testAutoResolverIntegration().then(() => {
+  console.log('PASS: Select lifecycle, Back/focus restoration, input cancellation, nested editor, batch storage, playback playlist, reload safety, and auto-resolver integration');
+}).catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
