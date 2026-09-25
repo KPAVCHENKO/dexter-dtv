@@ -1,4 +1,4 @@
-/* Dexter DTV for Lampa / ByLampa — v0.2.0
+/* Dexter DTV for Lampa / ByLampa — v0.3.0
  * Custom launch menu for Dexter (2006), S01. Direct HLS playback, optional user-owned
  * HTTPS resolver endpoint. No hard-coded stream URLs, cookies, tokens or scraping.
  * Source: https://github.com/kpavchenko/dexter-dtv
@@ -6,13 +6,19 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.2.0';
-  var BOOT_FLAG = '__dexter_dtv_v020_boot';
+  var VERSION = '0.3.0';
+  var RUNTIME_KEY = '__dexter_dtv_runtime';
   var KEY_PREFIX = 'dexter_dtv_s1_e'; // Preserve v0.1.0 saved episode URLs.
   var RESOLVER_KEY = 'dexter_dtv_v2_resolver';
   var EPISODES = 12;
   var started = false;
   var retries = 0;
+  var disposed = false;
+
+  // A plugin URL can be loaded again without restarting Lampa.  Keep one
+  // listener and one handler on our own button across such reloads.
+  var previousRuntime = window[RUNTIME_KEY];
+  if (previousRuntime && previousRuntime.dispose) previousRuntime.dispose();
 
   function info(message) {
     if (window.Lampa && Lampa.Noty && Lampa.Noty.show) Lampa.Noty.show(message);
@@ -109,55 +115,75 @@
     try {
       // Keep the same supported Lampa playback path that invokes the selected
       // external Android player (e.g. DDD) in compatible Android app builds.
+      // Lampa reads data.playlist synchronously when Player.play starts.  It
+      // must therefore be on the launch object, not sent afterwards: Android
+      // external players (including DDD) can receive the launch immediately.
+      current.playlist = playlist;
       Lampa.Player.play(current);
-      if (Lampa.Player.playlist) Lampa.Player.playlist(playlist);
     } catch (e) {
       logSafe(e);
       info('Не удалось передать видео плееру. Проверь DDD в настройках Lampa.');
     }
   }
 
-  function inputText(title, current, callback) {
-    Lampa.Input.edit({title: title, value: current || '', free: true, nosave: true}, callback);
-  }
-
-  // One session = one captured caller context. Never blindly switch to "content";
-  // newer Lampa builds and ByLampa can have different active controllers.
-  function makeSession() {
-    var controller = 'content';
-    try {
-      var enabled = Lampa.Controller.enabled && Lampa.Controller.enabled();
-      if (enabled && enabled.name && enabled.name !== 'select') controller = enabled.name;
-    } catch (ignored) {}
-    var focus = null;
-    try { focus = $('.dexter-dtv-launcher.focus').first()[0] || null; }
-    catch (ignored2) {}
-    return {controller: controller, focus: focus, locked: false};
+  // One session = the controller that was active before our Select opened.
+  // Do not infer "content": a full-card uses "full_start" and Lampa restores
+  // its selector collection only when that exact controller is toggled.
+  function makeSession(launcher) {
+    var enabled = null;
+    try { enabled = Lampa.Controller.enabled && Lampa.Controller.enabled(); }
+    catch (ignored) {}
+    return {
+      controller: enabled && enabled.name && enabled.name !== 'select' ? enabled.name : null,
+      focus: launcher || null,
+      restoring: false
+    };
   }
 
   function restore(session) {
-    if (!session || session.locked) return;
-    session.locked = true;
+    if (!session || !session.controller || session.restoring) return;
+    session.restoring = true;
     try {
-      if (Lampa.Controller.enabled && Lampa.Controller.enabled().name === session.controller) return;
+      // Toggle even when the name already matches.  Lampa's controller.toggle
+      // rebuilds Navigator's collection and focus for that controller.
       Lampa.Controller.toggle(session.controller);
-      // Restoring focus only when our button is still in the live document.
       if (session.focus && document.documentElement.contains(session.focus) &&
           Lampa.Controller.collectionFocus) {
-        Lampa.Controller.collectionFocus(session.focus, $(session.focus).parent());
+        Lampa.Controller.collectionFocus(session.focus, document.body);
       }
     } catch (e) { logSafe(e); }
-    finally { session.locked = false; }
+    finally { session.restoring = false; }
+  }
+
+  // Lampa.Input.edit always toggles "settings_component" immediately before
+  // invoking its callback. Its callback is consequently the reliable place to restore the card
+  // controller, for both Enter and Back/cancel.
+  function inputText(session, title, current, callback) {
+    restore(session);
+    var finished = false;
+    try {
+      Lampa.Input.edit({title: title, value: current || '', free: true, nosave: true}, function (entered) {
+        if (finished) return;
+        finished = true;
+        restore(session);
+        callback(String(entered || '').trim());
+      });
+    } catch (e) {
+      restore(session);
+      logSafe(e);
+      info('Не удалось открыть поле ввода.');
+    }
   }
 
   function editEpisode(n, session, autoplay) {
-    restore(session); // Restore underlying controller BEFORE opening keyboard.
-    inputText('Серия ' + n + ' · прямая ссылка .m3u8 / .mp4', urlFor(n), function (entered) {
-      var url = String(entered || '').trim();
-      if (!url) return; // Cancel leaves original UI controller intact.
+    var current = urlFor(n);
+    inputText(session, 'Серия ' + n + ' · прямая ссылка .m3u8 / .mp4', current, function (url) {
+      // Lampa reports the current value on Back.  Treat it as a cancellation,
+      // rather than writing it again or reopening a stale modal.
+      if (!url || url === current) return;
       if (!validMediaUrl(url)) {
         info('Нужен полный HTTPS-адрес .m3u8, .mp4 или .mpd.');
-        return;
+        return openEpisodes(session);
       }
       storageSet(KEY_PREFIX + n, url);
       info('Ссылка серии ' + n + ' сохранена на этом устройстве.');
@@ -186,8 +212,8 @@
   }
 
   function importBatch(session) {
-    restore(session);
-    inputText('Ссылки: 1=https://... || 2=https://...', '', function (entered) {
+    inputText(session, 'Ссылки: 1=https://... || 2=https://...', '', function (entered) {
+      if (!entered) return;
       var parsed = parseBatch(entered);
       var count = 0;
       Object.keys(parsed.items).forEach(function (n) {
@@ -196,15 +222,18 @@
       });
       info('Импортировано ссылок: ' + count + (parsed.errors ? '; ошибок: ' + parsed.errors : ''));
       if (count) openEpisodes(session);
+      else info('Не найдено корректных HTTPS-ссылок для серий 1–12.');
     });
   }
 
   function configureResolver(session) {
-    restore(session);
-    inputText('HTTPS URL твоего API /resolve (пусто = отмена)', storageGet(RESOLVER_KEY), function (entered) {
-      var url = String(entered || '').trim();
-      if (!url) return;
-      if (!validApiBase(url)) return info('Нужен HTTPS-адрес API без ? и #.');
+    var current = storageGet(RESOLVER_KEY);
+    inputText(session, 'HTTPS URL твоего API /resolve (пусто = отмена)', current, function (url) {
+      if (!url || url === current) return;
+      if (!validApiBase(url)) {
+        info('Нужен HTTPS-адрес API без ? и #.');
+        return openEpisodes(session);
+      }
       storageSet(RESOLVER_KEY, url);
       info('API сохранён. Он должен отдавать JSON {"url":"https://...m3u8"}.');
       openEpisodes(session);
@@ -212,7 +241,6 @@
   }
 
   function launchEpisode(n, session) {
-    restore(session);
     var saved = urlFor(n);
     if (!validApiBase(storageGet(RESOLVER_KEY))) {
       if (validMediaUrl(saved)) return play(n);
@@ -227,8 +255,17 @@
     });
   }
 
-  function openEpisodes(existing) {
-    var session = existing || makeSession();
+  function closeMenu(session) {
+    // Select.onSelect only calls hide(); close() additionally clears the
+    // Activity "select=open" state and invokes onBack.  This mirrors Lampa's
+    // own menus and leaves no invisible select controller behind.
+    try { Lampa.Select.close(); }
+    catch (e) { logSafe(e); }
+    restore(session);
+  }
+
+  function openEpisodes(existing, launcher) {
+    var session = existing || makeSession(launcher);
     var items = [];
     var hasResolver = validApiBase(storageGet(RESOLVER_KEY));
     for (var n = 1; n <= EPISODES; n++) {
@@ -249,15 +286,12 @@
       onBack: function () { restore(session); },
       onLong: function (item) {
         if (item.episode) {
-          // close() restores the original controller via onBack.
-          Lampa.Select.close();
+          closeMenu(session);
           editEpisode(item.episode, session, false);
         }
       },
       onSelect: function (item) {
-        // Lampa.Select auto-hides itself BEFORE invoking onSelect.
-        // Restore the captured caller, NOT a hard-coded controller.
-        restore(session);
+        closeMenu(session);
         if (item.episode) launchEpisode(item.episode, session);
         else if (item.action === 'batch') importBatch(session);
         else if (item.action === 'api') configureResolver(session);
@@ -284,12 +318,30 @@
       var root = activity.render();
       if (!root || !root.find) return;
       var target = root.find('.full-start-new__buttons, .full-start__buttons').first();
-      if (!target.length || root.find('.dexter-dtv-launcher').length) return;
-      var button = $('<div class="full-start__button selector view--online dexter-dtv-launcher">' +
-        '<span>▶ Декстер · DTV</span></div>');
-      button.on('hover:enter', function () { openEpisodes(); });
-      target.prepend(button);
+      if (!target.length) return;
+      var button = root.find('.dexter-dtv-launcher').first();
+      if (!button.length) {
+        button = $('<div class="full-start__button selector view--online dexter-dtv-launcher">' +
+          '<span>▶ Декстер · DTV</span></div>');
+        target.prepend(button);
+      }
+      bindButton(button);
     } catch (e2) { logSafe(e2); }
+  }
+
+  function bindButton(button) {
+    // This class belongs only to Dexter DTV, so removing its previous handler
+    // is safe and prevents double opens after a plugin reload.
+    button.off('hover:enter').on('hover:enter.dexterDtv', function () {
+      openEpisodes(null, this);
+    });
+  }
+
+  function bindExistingButtons() {
+    try {
+      var buttons = $('.dexter-dtv-launcher');
+      if (buttons && buttons.each) buttons.each(function () { bindButton($(this)); });
+    } catch (e) { logSafe(e); }
   }
 
   function start() {
@@ -298,14 +350,13 @@
         !Lampa.Input || !Lampa.Storage || !Lampa.Controller) return;
     started = true;
     Lampa.Listener.follow('full', addButton);
+    bindExistingButtons();
     console.log('[Dexter DTV] v' + VERSION + ' initialized');
   }
 
   function boot() {
-    if (window[BOOT_FLAG]) return;
-    window[BOOT_FLAG] = true;
     function check() {
-      if (started || retries++ > 100) return;
+      if (disposed || started || retries++ > 100) return;
       if (window.Lampa) {
         start();
         if (!started) return setTimeout(check, 250);
@@ -313,5 +364,18 @@
     }
     check();
   }
+
+  window[RUNTIME_KEY] = {
+    version: VERSION,
+    dispose: function () {
+      if (disposed) return;
+      disposed = true;
+      if (started && window.Lampa && Lampa.Listener && Lampa.Listener.remove) {
+        Lampa.Listener.remove('full', addButton);
+      }
+      try { $('.dexter-dtv-launcher').off('.dexterDtv'); }
+      catch (ignored) {}
+    }
+  };
   boot();
 })();
