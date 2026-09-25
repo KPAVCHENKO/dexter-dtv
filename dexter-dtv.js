@@ -139,15 +139,15 @@
 });
 
 /* --- Dexter DTV bundled resolver --- */
-/* Dexter DTV for Lampa / ByLampa — v0.4.0
- * Custom launch menu for Dexter (2006), S01. Direct HLS playback, optional user-owned
- * HTTPS resolver endpoint. No hard-coded stream URLs, cookies, tokens or scraping.
+/* Dexter DTV for Lampa / ByLampa — v0.5.1
+ * Custom launch menu for Dexter (2006), S01. Direct HLS playback with bundled
+ * Novamedia sources. Optional user-owned HTTPS resolver endpoint.
  * Source: https://github.com/kpavchenko/dexter-dtv
  */
 (function () {
   'use strict';
 
-  var VERSION = '0.5.0';
+  var VERSION = '0.5.1';
   var RUNTIME_KEY = '__dexter_dtv_runtime';
   var KEY_PREFIX = 'dexter_dtv_s1_e'; // Preserve v0.1.0 saved episode URLs.
   var RESOLVER_KEY = 'dexter_dtv_v2_resolver';
@@ -301,16 +301,24 @@
     }
     if (!current) return;
     try {
-      // Keep the same supported Lampa playback path that invokes the selected
-      // external Android player (e.g. DDD) in compatible Android app builds.
-      // Lampa reads data.playlist synchronously when Player.play starts.  It
-      // must therefore be on the launch object, not sent afterwards: Android
-      // external players (including DDD) can receive the launch immediately.
-      current.playlist = playlist;
       Lampa.Player.play(current);
     } catch (e) {
       logSafe(e);
-      info('Не удалось передать видео плееру. Проверь DDD в настройках Lampa.');
+      var errorType = e && typeof e.name === 'string' && /^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(e.name)
+        ? e.name : 'неизвестная ошибка';
+      info('Lampa не смогла запустить Dexter DTV (' + errorType + ').');
+      return;
+    }
+    // Lampa-based plugins set the queue through Player.playlist() after
+    // Player.play(). Keep it separate from the selected item so the player
+    // bridge can serialize the current source normally.
+    try {
+      if (typeof Lampa.Player.playlist === 'function') {
+        Lampa.Player.playlist(playlist);
+      }
+    } catch (e) {
+      logSafe(e);
+      info('Видео запускается, но Lampa не приняла список серий.');
     }
   }
 
