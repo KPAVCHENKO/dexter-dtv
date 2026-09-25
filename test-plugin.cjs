@@ -173,4 +173,69 @@ context.Lampa.Select.close();
 
 assert.ok(selectCloses >= 7, 'every exit path uses Select.close rather than leaving an invisible Select controller');
 assert.ok(controllerToggles.every((name) => name === 'full_start' || name === 'select'), 'no hard-coded content controller is used');
-console.log('PASS: Select lifecycle, Back/focus restoration, input cancellation, nested editor, batch storage, playback playlist, and reload safety');
+
+async function testAutoResolverIntegration() {
+  let receivedRequest = null;
+  context.window.DexterDtvRezkaResolver = {
+    resolveEpisode: (request) => {
+      receivedRequest = request;
+      return Promise.resolve({url: 'https://media.example.invalid/fresh/manifest.m3u8', quality: '720p', expiresAt: null});
+    }
+  };
+  openMenu();
+  activeMenu.onSelect(activeMenu.items.find((item) => item.action === 'auto'));
+  assert.equal(active, 'select', 'automatic-source option opens an episode picker');
+  activeMenu.onSelect(itemForEpisode(3));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(receivedRequest.show, 'dexter');
+  assert.equal(receivedRequest.season, 1);
+  assert.equal(receivedRequest.episode, 3);
+  assert.equal(receivedRequest.voice, 'novamedia');
+  assert.equal(launched.url, 'https://media.example.invalid/fresh/manifest.m3u8', 'fresh resolver output launches Player');
+  assert.equal(launched.playlist.find((item) => item.episode === 3).url, launched.url, 'fresh source is in the launch playlist');
+  assert.equal(storage.dexter_dtv_s1_e3, undefined, 'short-lived automatic URL is never saved');
+
+  context.window.DexterDtvRezkaResolver = {
+    resolveEpisode: () => Promise.reject({code: 'BROWSER_VERIFICATION'})
+  };
+  openMenu();
+  activeMenu.onSelect(activeMenu.items.find((item) => item.action === 'auto'));
+  activeMenu.onSelect(itemForEpisode(4));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(active, 'full_start', 'resolver diagnostic leaves remote navigation on the card');
+}
+
+async function testPrivateMediaApiContract() {
+  const calls = [];
+  context.XMLHttpRequest = function () {
+    this.headers = {};
+    this.open = (method, url) => { this.method = method; this.url = url; };
+    this.setRequestHeader = (name, value) => { this.headers[name] = value; };
+    this.send = (body) => {
+      calls.push({method: this.method, url: this.url, headers: this.headers, body});
+      this.status = 200;
+      this.readyState = 4;
+      this.responseText = JSON.stringify({ok: true, data: {url: 'https://media.example.invalid/api/manifest.m3u8', expiresAt: null}});
+      this.onreadystatechange();
+    };
+  };
+  storage.dexter_dtv_v2_resolver = 'https://autoposter.example/api/internal/media/resolve';
+  storage.dexter_dtv_v2_device_key = 'pm_abcdefghijklmnopqrstuvwxyz1234567890';
+  openMenu();
+  activeMenu.onSelect(itemForEpisode(5));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(calls.length, 1, 'configured private API is called once');
+  assert.equal(calls[0].method, 'POST', 'private API contract uses POST');
+  assert.equal(calls[0].url, storage.dexter_dtv_v2_resolver, 'episode parameters are not placed in the URL');
+  assert.equal(calls[0].headers.Authorization, 'Bearer ' + storage.dexter_dtv_v2_device_key, 'device key uses Authorization');
+  assert.deepEqual(JSON.parse(calls[0].body), {show: 'dexter', season: 1, episode: 5, voice: 'novamedia'});
+  assert.equal(launched.url, 'https://media.example.invalid/api/manifest.m3u8', 'enveloped API result launches Player');
+  assert.equal(storage.dexter_dtv_s1_e5, undefined, 'private API result is never persisted');
+}
+
+testAutoResolverIntegration().then(testPrivateMediaApiContract).then(() => {
+  console.log('PASS: Select lifecycle, Back/focus restoration, input cancellation, nested editor, batch storage, playback playlist, auto-resolver integration, and private-media API contract');
+}).catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
