@@ -139,7 +139,7 @@
 });
 
 /* --- Dexter DTV bundled resolver --- */
-/* Dexter DTV for Lampa / ByLampa — v0.3.0
+/* Dexter DTV for Lampa / ByLampa — v0.3.1
  * Custom launch menu for Dexter (2006), S01. Direct HLS playback, optional user-owned
  * HTTPS resolver endpoint. No hard-coded stream URLs, cookies, tokens or scraping.
  * Source: https://github.com/kpavchenko/dexter-dtv
@@ -147,10 +147,11 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.3.0';
+  var VERSION = '0.3.1';
   var RUNTIME_KEY = '__dexter_dtv_runtime';
   var KEY_PREFIX = 'dexter_dtv_s1_e'; // Preserve v0.1.0 saved episode URLs.
   var RESOLVER_KEY = 'dexter_dtv_v2_resolver';
+  var DEVICE_KEY = 'dexter_dtv_v2_device_key';
   var EPISODES = 12;
   var started = false;
   var retries = 0;
@@ -193,6 +194,10 @@
       /^https:\/\/[^\s?#]+\/?$/i.test(url) && !/[@<>"'`]/.test(url);
   }
 
+  function validDeviceKey(key) {
+    return typeof key === 'string' && /^pm_[A-Za-z0-9_-]{32,}$/.test(key);
+  }
+
   function resolverErrorMessage(error) {
     var code = error && error.code;
     if (code === 'BROWSER_VERIFICATION') return 'Источник требует интерактивную проверку человека.';
@@ -218,14 +223,13 @@
     return {url: url, title: titleFor(n), isonline: true, season: 1, episode: n};
   }
 
-  // Resolves a user-configured HTTPS API. Response: {"url":"https://...m3u8"}.
-  // CORS must allow the origin of ByLampa. This does NOT extract Rezka streams.
+  // Contract: POST {show,season,episode,voice}, Authorization: Bearer pm_…
+  // Response: {ok:true,data:{url,expiresAt}}. No credentials or media URL are logged.
   function resolve(n, done) {
     var base = storageGet(RESOLVER_KEY);
     if (!validApiBase(base)) return done(null, 'API не настроен');
-    var sep = base.indexOf('?') >= 0 ? '&' : '?';
-    // No stream URL, storage data, auth tokens or cookies are sent to the API.
-    var endpoint = base + sep + 'season=1&episode=' + n + '&voice=dtv';
+    var key = storageGet(DEVICE_KEY);
+    if (!validDeviceKey(key)) return done(null, 'Ключ устройства не настроен');
     var xhr = new XMLHttpRequest();
     var settled = false;
     function finish(url, error) {
@@ -234,21 +238,31 @@
       done(url, error);
     }
     try {
-      xhr.open('GET', endpoint, true);
+      xhr.open('POST', base, true);
       xhr.timeout = 10000;
       xhr.setRequestHeader('Accept', 'application/json');
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('Authorization', 'Bearer ' + key);
       xhr.onreadystatechange = function () {
         if (xhr.readyState !== 4) return;
-        if (xhr.status < 200 || xhr.status > 299) return finish(null, 'API вернул ошибку HTTP ' + xhr.status);
+        if (xhr.status < 200 || xhr.status > 299) {
+          try {
+            var failure = JSON.parse(xhr.responseText);
+            if (failure && failure.error && failure.error.code === 'SOURCE_NOT_CONFIGURED') {
+              return finish(null, 'Источник на сервере пока не настроен.');
+            }
+          } catch (ignored) {}
+          return finish(null, 'API вернул ошибку HTTP ' + xhr.status);
+        }
         try {
           var data = JSON.parse(xhr.responseText);
-          var url = String(data && data.url || '').trim();
+          var url = String(data && data.ok && data.data && data.data.url || '').trim();
           return validMediaUrl(url) ? finish(url, null) : finish(null, 'В ответе API нет корректного URL');
         } catch (e) { return finish(null, 'Некорректный ответ API'); }
       };
       xhr.onerror = function () { finish(null, 'Нет доступа к API (сеть/CORS)'); };
       xhr.ontimeout = function () { finish(null, 'API не ответил за 10 секунд'); };
-      xhr.send();
+      xhr.send(JSON.stringify({show: 'dexter', season: 1, episode: n, voice: 'novamedia'}));
     } catch (e) { logSafe(e); finish(null, 'Не удалось вызвать API'); }
   }
 
@@ -338,7 +352,8 @@
     inputText(session, 'Серия ' + n + ' · прямая ссылка .m3u8 / .mp4', current, function (url) {
       // Lampa reports the current value on Back.  Treat it as a cancellation,
       // rather than writing it again or reopening a stale modal.
-      if (!url || url === current) return;
+      if (!url) return;
+      if (url === current) return configureDeviceKey(session);
       if (!validMediaUrl(url)) {
         info('Нужен полный HTTPS-адрес .m3u8, .mp4 или .mpd.');
         return openEpisodes(session);
@@ -393,14 +408,27 @@
         return openEpisodes(session);
       }
       storageSet(RESOLVER_KEY, url);
-      info('API сохранён. Он должен отдавать JSON {"url":"https://...m3u8"}.');
+      info('Адрес API сохранён. Теперь добавь ключ устройства.');
+      configureDeviceKey(session);
+    });
+  }
+
+  function configureDeviceKey(session) {
+    inputText(session, 'Ключ устройства pm_… (не показывается повторно; пусто = отмена)', '', function (key) {
+      if (!key) return openEpisodes(session);
+      if (!validDeviceKey(key)) {
+        info('Нужен ключ устройства формата pm_…');
+        return openEpisodes(session);
+      }
+      storageSet(DEVICE_KEY, key);
+      info('Ключ устройства сохранён только в локальном хранилище Lampa.');
       openEpisodes(session);
     });
   }
 
   function launchEpisode(n, session) {
     var saved = urlFor(n);
-    if (!validApiBase(storageGet(RESOLVER_KEY))) {
+    if (!validApiBase(storageGet(RESOLVER_KEY)) || !validDeviceKey(storageGet(DEVICE_KEY))) {
       if (validMediaUrl(saved)) return play(n);
       return editEpisode(n, session, true);
     }
@@ -466,7 +494,7 @@
   function openEpisodes(existing, launcher) {
     var session = existing || makeSession(launcher);
     var items = [];
-    var hasResolver = validApiBase(storageGet(RESOLVER_KEY));
+    var hasResolver = validApiBase(storageGet(RESOLVER_KEY)) && validDeviceKey(storageGet(DEVICE_KEY));
     for (var n = 1; n <= EPISODES; n++) {
       items.push({
         title: 'Серия ' + n,
@@ -479,7 +507,7 @@
       subtitle: 'Rezka / Novamedia · может быть заблокировано CORS или проверкой', action: 'auto'});
     items.push({title: 'Импорт ссылок пачкой (1=URL || 2=URL)', action: 'batch'});
     items.push({title: 'Автоисточник · API (дополнительно)',
-      subtitle: hasResolver ? 'Свой HTTPS API настроен' : 'Нужен отдельный сервер-резолвер', action: 'api'});
+      subtitle: hasResolver ? 'Личный HTTPS API и ключ устройства настроены' : 'Настроить личный API и ключ устройства', action: 'api'});
     items.push({title: 'Версия плагина ' + VERSION, subtitle: 'HD · DTV/Novamedia · 12 серий', action: 'about'});
     Lampa.Select.show({
       title: 'Декстер (2006) · 1 сезон · DTV',

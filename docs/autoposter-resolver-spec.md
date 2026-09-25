@@ -17,38 +17,35 @@ src/resolver/rezka.js can only parse a page or declared iframe that the browser 
 
 Use a server only if it has a legitimate, authorized source of the episode metadata and can return an HLS URL without bypassing interactive verification. A server does not remove the source site's access rules; it must return the same diagnostic when it lacks authorized access.
 
-The existing Autoposter project is not changed by this repository. If it is authorized to provide this function, it can expose this minimal endpoint:
+Autoposter provides an isolated, device-key-protected endpoint. The plugin and
+server use this exact contract:
 
 ~~~
-GET /resolve?show=dexter&season=1&episode=3&voice=novamedia
+POST /api/internal/media/resolve
 Accept: application/json
+Content-Type: application/json
+Authorization: Bearer pm_…
+
+{"show":"dexter","season":1,"episode":3,"voice":"novamedia"}
 ~~~
 
 Successful response:
 
 ~~~json
-{
-  "url": "https://…/manifest.m3u8",
-  "quality": "720p",
-  "expiresAt": null
-}
+{"ok":true,"data":{"url":"https://…/manifest.m3u8","expiresAt":null}}
 ~~~
 
 Failure response:
 
 ~~~json
-{
-  "error": {
-    "code": "BROWSER_VERIFICATION",
-    "message": "Источник требует интерактивную проверку человека."
-  }
-}
+{"ok":false,"error":{"code":"SOURCE_NOT_CONFIGURED","message":"Источник видео не настроен"}}
 ~~~
 
 Operational requirements:
 
-- Allow the ByLampa origin with a narrow CORS policy; do not use * if credentials are ever introduced.
+- Configure the exact ByLampa origin in `PRIVATE_MEDIA_CORS_ORIGINS`; do not use `*`.
+- The device key is entered locally in Lampa settings and is never bundled into `dexter-dtv.js`.
 - Do not log full media URLs, query tokens, cookies, or response bodies.
 - Treat URLs as short-lived: do not persist them in the plugin, and cache only non-secret metadata for a short, explicit TTL.
-- Validate show, season 1, episode 1..12, and voice=novamedia|dtv.
+- Validate show=dexter, season 1..8, episode 1..30, and voice=novamedia.
 - Return a 4xx/5xx status plus the stable diagnostic code for blocked, unavailable, unsupported, or invalid requests.

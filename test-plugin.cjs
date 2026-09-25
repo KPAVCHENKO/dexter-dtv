@@ -205,8 +205,36 @@ async function testAutoResolverIntegration() {
   assert.equal(active, 'full_start', 'resolver diagnostic leaves remote navigation on the card');
 }
 
-testAutoResolverIntegration().then(() => {
-  console.log('PASS: Select lifecycle, Back/focus restoration, input cancellation, nested editor, batch storage, playback playlist, reload safety, and auto-resolver integration');
+async function testPrivateMediaApiContract() {
+  const calls = [];
+  context.XMLHttpRequest = function () {
+    this.headers = {};
+    this.open = (method, url) => { this.method = method; this.url = url; };
+    this.setRequestHeader = (name, value) => { this.headers[name] = value; };
+    this.send = (body) => {
+      calls.push({method: this.method, url: this.url, headers: this.headers, body});
+      this.status = 200;
+      this.readyState = 4;
+      this.responseText = JSON.stringify({ok: true, data: {url: 'https://media.example.invalid/api/manifest.m3u8', expiresAt: null}});
+      this.onreadystatechange();
+    };
+  };
+  storage.dexter_dtv_v2_resolver = 'https://autoposter.example/api/internal/media/resolve';
+  storage.dexter_dtv_v2_device_key = 'pm_abcdefghijklmnopqrstuvwxyz1234567890';
+  openMenu();
+  activeMenu.onSelect(itemForEpisode(5));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(calls.length, 1, 'configured private API is called once');
+  assert.equal(calls[0].method, 'POST', 'private API contract uses POST');
+  assert.equal(calls[0].url, storage.dexter_dtv_v2_resolver, 'episode parameters are not placed in the URL');
+  assert.equal(calls[0].headers.Authorization, 'Bearer ' + storage.dexter_dtv_v2_device_key, 'device key uses Authorization');
+  assert.deepEqual(JSON.parse(calls[0].body), {show: 'dexter', season: 1, episode: 5, voice: 'novamedia'});
+  assert.equal(launched.url, 'https://media.example.invalid/api/manifest.m3u8', 'enveloped API result launches Player');
+  assert.equal(storage.dexter_dtv_s1_e5, undefined, 'private API result is never persisted');
+}
+
+testAutoResolverIntegration().then(testPrivateMediaApiContract).then(() => {
+  console.log('PASS: Select lifecycle, Back/focus restoration, input cancellation, nested editor, batch storage, playback playlist, auto-resolver integration, and private-media API contract');
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;
