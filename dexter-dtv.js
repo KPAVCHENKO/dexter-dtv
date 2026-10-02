@@ -147,24 +147,24 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.5.4';
+  var VERSION = '0.5.5';
   var RUNTIME_KEY = '__dexter_dtv_runtime';
   var KEY_PREFIX = 'dexter_dtv_s1_e'; // Preserve v0.1.0 saved episode URLs.
   var RESOLVER_KEY = 'dexter_dtv_v2_resolver';
   var DEVICE_KEY = 'dexter_dtv_v2_device_key';
   var DEFAULT_SOURCES = {
-    "1": "https://limbo.voidfralom.org/e3e4744162cb8f2f631ae23def704bc3:2026100219:45fbed42-b65c-4f58-ae4c-7e676ad0304a/1/3/5/4/5/9/1/ehkrk.mp4:hls:manifest.m3u8",
-    "2": "https://petra.voidfralom.org/cbb216c2efd92ae95453f1603293f030:2026100219:bf3dfebb-6772-4a7c-8fda-b2314bb03125/1/3/5/4/6/2/4/h04ls.mp4:hls:manifest.m3u8",
-    "3": "https://bingo.voidfralom.org/4f08eb635199de87bd7f391756f110bd:2026100219:c2ee33d7-0693-40e0-a2ca-4ffe356e2b44/1/3/5/4/6/0/6/7c9vk.mp4:hls:manifest.m3u8",
-    "4": "https://fox.voidfralom.org/17ede46d2e1918970be48a83a8ed0fbe:2026100219:32dad6e1-ac9a-43f1-8dd3-0244bc79a383/1/3/5/4/5/9/3/15oo2.mp4:hls:manifest.m3u8",
-    "5": "https://silence.voidfralom.org/f03e03e1a02fc4cee55ad16b97065a51:2026100219:ca7ddaaa-b284-4da5-b8eb-cfa50a8d143c/1/3/5/4/6/0/7/u5k8p.mp4:hls:manifest.m3u8",
-    "6": "https://apollo.voidfralom.org/509999d7821c120ef5d280685a094569:2026100219:3688be86-8242-4e9d-84d3-631d2f2775d6/1/3/5/4/5/9/4/2vzew.mp4:hls:manifest.m3u8",
-    "7": "https://flora.voidfralom.org/2630bac2693e11a7deae999bbc6f40e0:2026100219:94e37061-fee7-456c-a71f-c4b7bcd5db83/1/3/5/4/5/9/2/l1nqb.mp4:hls:manifest.m3u8",
-    "8": "https://octopus.voidfralom.org/cbd49fa1992367c50c5cdc5fea7448c1:2026100219:4915e349-1a84-4454-a3f5-db1a65bc78ff/1/3/5/4/6/0/8/cz3g4.mp4:hls:manifest.m3u8",
-    "9": "https://sierra.voidfralom.org/6ede013eb5072ee7951e0927a75b435b:2026100219:d3ae4d55-0ce5-4088-9d93-0542bce21ce6/1/3/5/4/6/0/0/o7d0z.mp4:hls:manifest.m3u8",
-    "10": "https://pioneer.voidfralom.org/2b53ef561097d219ba7012b84accd278:2026100219:5f46a737-e2d9-4aa0-91df-b41b860923bb/1/3/5/4/5/9/6/pevpm.mp4:hls:manifest.m3u8",
-    "11": "https://nika.voidfralom.org/c1ffb6b054addb76c60cb3909ce68dc9:2026100219:0174d9e7-ed2c-465a-a802-23932325f126/1/3/5/4/6/0/9/5glo7.mp4:hls:manifest.m3u8",
-    "12": "https://scorpius.voidfralom.org/207b1729180c49c173549c8e9fb1ad1c:2026100219:a8975fc3-f1f8-4f71-a684-bf6357c48ef6/1/3/5/4/5/9/7/n74w1.mp4:hls:manifest.m3u8"
+    "1": "https://limbo.voidfralom.org/3017f64bc52e499ab87cbd18fb6b40b4:2026100319:ee0801ea-a68e-453b-b253-c550b131dd50/1/3/5/4/5/9/1/ehkrk.mp4:hls:manifest.m3u8",
+    "2": "https://petra.voidfralom.org/824147cb56049ba432b32898623cdbdf:2026100319:bf33d4dc-c7b2-4dc9-b5ec-94b090143939/1/3/5/4/6/2/4/h04ls.mp4:hls:manifest.m3u8",
+    "3": "https://bingo.voidfralom.org/3afef129fc87c41e84f301d092256462:2026100319:9ccaabec-fefe-41d5-bafb-1b77c4b9a543/1/3/5/4/6/0/6/7c9vk.mp4:hls:manifest.m3u8",
+    "4": "https://fox.voidfralom.org/6f7da8e0e4b9a62c87941d0d714123ea:2026100319:a25d97e9-99c6-41b9-9e1b-0173632c13b4/1/3/5/4/5/9/3/15oo2.mp4:hls:manifest.m3u8",
+    "5": "https://silence.voidfralom.org/5414f5d16bb1cc9990c98b77e3680777:2026100319:5618955e-7f12-42d6-a8ba-4824c53b4e3c/1/3/5/4/6/0/7/u5k8p.mp4:hls:manifest.m3u8",
+    "6": "https://apollo.voidfralom.org/32d2c6e6553a2431faf7677fe526ced6:2026100319:1736a9b0-df7b-4ff8-b7d9-1a6a69b0ed81/1/3/5/4/5/9/4/2vzew.mp4:hls:manifest.m3u8",
+    "7": "https://flora.voidfralom.org/36a50a077c86acf5b0e1c6880c8a2eb5:2026100319:817a079a-b214-49d9-b2d1-f3b7a77002eb/1/3/5/4/5/9/2/l1nqb.mp4:hls:manifest.m3u8",
+    "8": "https://octopus.voidfralom.org/a22dcc142bd4b288434a254feb06714d:2026100319:f4dc2444-3267-4b0c-a01e-f11a53ccbdbb/1/3/5/4/6/0/8/cz3g4.mp4:hls:manifest.m3u8",
+    "9": "https://sierra.voidfralom.org/1091a5348f03b57a5a8985c62c7034cf:2026100319:b1fffd3e-c811-433a-8507-66fa4b95b1cd/1/3/5/4/6/0/0/o7d0z.mp4:hls:manifest.m3u8",
+    "10": "https://pioneer.voidfralom.org/a91b1e82a419c5a7923441f4362186b9:2026100319:eec439e1-ebb7-40c6-b5ac-3196a528c99b/1/3/5/4/5/9/6/pevpm.mp4:hls:manifest.m3u8",
+    "11": "https://nika.voidfralom.org/891683cd3f5f53a0a65a2275684f9dc7:2026100319:cd7278f0-6c9d-44ea-b619-5224adfd1043/1/3/5/4/6/0/9/5glo7.mp4:hls:manifest.m3u8",
+    "12": "https://scorpius.voidfralom.org/bb7cc5f26cc55481298c1d7dbfdc5dda:2026100319:c1fba4a7-69d5-420f-a8d7-e10afde47596/1/3/5/4/5/9/7/n74w1.mp4:hls:manifest.m3u8"
   };
   var EPISODES = 12;
   var started = false;
