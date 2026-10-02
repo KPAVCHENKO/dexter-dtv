@@ -147,7 +147,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.5.5';
+  var VERSION = '0.5.6';
   var RUNTIME_KEY = '__dexter_dtv_runtime';
   var KEY_PREFIX = 'dexter_dtv_s1_e'; // Preserve v0.1.0 saved episode URLs.
   var RESOLVER_KEY = 'dexter_dtv_v2_resolver';
@@ -396,6 +396,112 @@
     });
   }
 
+
+  // Stable filenames observed for Dexter S01 across multiple captures.
+  // The signed prefix changes, but the media filename identifies the episode.
+  var CAPTURE_EPISODE_BY_FILE = {
+    'ehkrk': 1,
+    'h04ls': 2,
+    '7c9vk': 3,
+    '15oo2': 4,
+    'u5k8p': 5,
+    '2vzew': 6,
+    'l1nqb': 7,
+    'cz3g4': 8,
+    'o7d0z': 9,
+    'pevpm': 10,
+    '5glo7': 11,
+    'n74w1': 12
+  };
+
+  function captureEpisodeForUrl(url) {
+    var match = String(url || '').match(/\/([A-Za-z0-9]+)\.mp4:hls:manifest\.m3u8(?:[?#]|$)/i);
+    if (!match) return 0;
+    return CAPTURE_EPISODE_BY_FILE[String(match[1]).toLowerCase()] || 0;
+  }
+
+  function captureCandidateScore(item) {
+    // Captures usually contain both root voidfralom.org and a per-file mirror.
+    // Prefer the mirror because that is what the current bundled config uses.
+    var host = String(item && item.host || '').toLowerCase();
+    if (host && host !== 'voidfralom.org' && /\.voidfralom\.org$/.test(host)) return 2;
+    return 1;
+  }
+
+  function parseSourceCapture(raw) {
+    var parsed;
+    try { parsed = JSON.parse(String(raw || '').trim()); }
+    catch (e) {
+      return {items: {}, errors: 1, message: 'JSON не удалось разобрать.'};
+    }
+
+    if (!parsed || parsed.schema !== 'dexter-dtv-source-capture-v1' ||
+        Number(parsed.season) !== 1 || !parsed.episodes || typeof parsed.episodes !== 'object') {
+      return {items: {}, errors: 1, message: 'Это не dexter-dtv-source-capture-v1 для первого сезона.'};
+    }
+
+    var found = {};
+    var scores = {};
+    var errors = 0;
+
+    Object.keys(parsed.episodes).forEach(function (bucket) {
+      var list = parsed.episodes[bucket];
+      if (!Array.isArray(list)) return;
+
+      list.forEach(function (item) {
+        var url = String(item && item.url || '').trim();
+        if (!validMediaUrl(url)) {
+          errors++;
+          return;
+        }
+
+        // Do not blindly trust the JSON bucket. Network requests from the
+        // previous episode can arrive just after a switch (as happened when
+        // episode 1 appeared inside bucket "2"). Prefer the stable filename.
+        var episode = captureEpisodeForUrl(url);
+        if (!episode) {
+          var fallback = parseInt(bucket, 10);
+          if (fallback >= 1 && fallback <= EPISODES) episode = fallback;
+        }
+        if (!episode) {
+          errors++;
+          return;
+        }
+
+        var score = captureCandidateScore(item);
+        if (!found[episode] || score > (scores[episode] || 0)) {
+          found[episode] = url;
+          scores[episode] = score;
+        }
+      });
+    });
+
+    return {items: found, errors: errors, message: ''};
+  }
+
+  function importSourceCapture(session) {
+    inputText(session, 'Вставь весь dexter-dtv-source-capture-v1 JSON', '', function (entered) {
+      if (!entered) return openEpisodes(session);
+
+      var parsed = parseSourceCapture(entered);
+      var count = 0;
+
+      Object.keys(parsed.items).forEach(function (n) {
+        storageSet(KEY_PREFIX + n, parsed.items[n]);
+        count++;
+      });
+
+      if (!count) {
+        info(parsed.message || 'В capture JSON не найдено подходящих HLS-ссылок.');
+        return openEpisodes(session);
+      }
+
+      info('Capture импортирован: ' + count + ' серий' +
+        (parsed.errors ? '; пропущено записей: ' + parsed.errors : '') + '.');
+      openEpisodes(session);
+    });
+  }
+
   function parseBatch(raw) {
     var result = {};
     var errors = 0;
@@ -538,6 +644,8 @@
     }
     items.push({title: 'ÐŸÐ¾Ð»ÑƒÑ‡Ð¸Ñ‚ÑŒ ÑÑÑ‹Ð»ÐºÑƒ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸ (ÑÐºÑÐ¿ÐµÑ€Ð¸Ð¼ÐµÐ½Ñ‚)',
       subtitle: 'Rezka / Novamedia Â· Ð¼Ð¾Ð¶ÐµÑ‚ Ð±Ñ‹Ñ‚ÑŒ Ð·Ð°Ð±Ð»Ð¾ÐºÐ¸Ñ€Ð¾Ð²Ð°Ð½Ð¾ CORS Ð¸Ð»Ð¸ Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÐ¾Ð¹', action: 'auto'});
+    items.push({title: 'Импорт source-capture JSON',
+      subtitle: 'Вставь свежий capture — серии определятся автоматически', action: 'capture'});
     items.push({title: 'Ð˜Ð¼Ð¿Ð¾Ñ€Ñ‚ ÑÑÑ‹Ð»Ð¾Ðº Ð¿Ð°Ñ‡ÐºÐ¾Ð¹ (1=URL || 2=URL)', action: 'batch'});
     items.push({title: 'ÐÐ²Ñ‚Ð¾Ð¸ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº Â· API (Ð´Ð¾Ð¿Ð¾Ð»Ð½Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾)',
       subtitle: hasResolver ? 'Ð›Ð¸Ñ‡Ð½Ñ‹Ð¹ HTTPS API Ð¸ ÐºÐ»ÑŽÑ‡ ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ð° Ð½Ð°ÑÑ‚Ñ€Ð¾ÐµÐ½Ñ‹' : 'ÐÐ°ÑÑ‚Ñ€Ð¾Ð¸Ñ‚ÑŒ Ð»Ð¸Ñ‡Ð½Ñ‹Ð¹ API Ð¸ ÐºÐ»ÑŽÑ‡ ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ð°', action: 'api'});
@@ -556,6 +664,7 @@
         closeMenu(session);
         if (item.episode) launchEpisode(item.episode, session);
         else if (item.action === 'auto') openAutoEpisodes(session);
+        else if (item.action === 'capture') importSourceCapture(session);
         else if (item.action === 'batch') importBatch(session);
         else if (item.action === 'api') configureResolver(session);
         else if (item.action === 'about') {
